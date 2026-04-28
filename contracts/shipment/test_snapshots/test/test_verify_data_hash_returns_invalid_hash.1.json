@@ -31,28 +31,6 @@
     ],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "add_carrier",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                }
-              ]
-            }
-          },
-          "sub_invocations": []
-        }
-      ]
-    ],
-    [
-      [
         "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
         {
           "function": {
@@ -86,132 +64,7 @@
       ]
     ],
     [],
-    [
-      [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "record_milestones_batch",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u64": 1
-                },
-                {
-                  "vec": [
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_0"
-                        },
-                        {
-                          "bytes": "0101010101010101010101010101010101010101010101010101010101010101"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_1"
-                        },
-                        {
-                          "bytes": "0202020202020202020202020202020202020202020202020202020202020202"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_2"
-                        },
-                        {
-                          "bytes": "0303030303030303030303030303030303030303030303030303030303030303"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_3"
-                        },
-                        {
-                          "bytes": "0404040404040404040404040404040404040404040404040404040404040404"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_4"
-                        },
-                        {
-                          "bytes": "0505050505050505050505050505050505050505050505050505050505050505"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_5"
-                        },
-                        {
-                          "bytes": "0606060606060606060606060606060606060606060606060606060606060606"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_6"
-                        },
-                        {
-                          "bytes": "0707070707070707070707070707070707070707070707070707070707070707"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_7"
-                        },
-                        {
-                          "bytes": "0808080808080808080808080808080808080808080808080808080808080808"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_8"
-                        },
-                        {
-                          "bytes": "0909090909090909090909090909090909090909090909090909090909090909"
-                        }
-                      ]
-                    },
-                    {
-                      "vec": [
-                        {
-                          "symbol": "checkpoint_9"
-                        },
-                        {
-                          "bytes": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "sub_invocations": []
-        }
-      ]
-    ]
+    []
   ],
   "ledger": {
     "protocol_version": 22,
@@ -245,39 +98,6 @@
                 "key": {
                   "ledger_key_nonce": {
                     "nonce": 801925984706572462
-                  }
-                },
-                "durability": "temporary",
-                "val": "void"
-              }
-            },
-            "ext": "v0"
-          },
-          6312000
-        ]
-      ],
-      [
-        {
-          "contract_data": {
-            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-            "key": {
-              "ledger_key_nonce": {
-                "nonce": 5541220902715666415
-              }
-            },
-            "durability": "temporary"
-          }
-        },
-        [
-          {
-            "last_modified_ledger_seq": 0,
-            "data": {
-              "contract_data": {
-                "ext": "v0",
-                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-                "key": {
-                  "ledger_key_nonce": {
-                    "nonce": 5541220902715666415
                   }
                 },
                 "durability": "temporary",
@@ -357,7 +177,7 @@
                 },
                 "durability": "persistent",
                 "val": {
-                  "u32": 11
+                  "u32": 1
                 }
               }
             },
@@ -409,51 +229,6 @@
             "ext": "v0"
           },
           16
-        ]
-      ],
-      [
-        {
-          "contract_data": {
-            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-            "key": {
-              "vec": [
-                {
-                  "symbol": "MilestoneEventCount"
-                },
-                {
-                  "u64": 1
-                }
-              ]
-            },
-            "durability": "persistent"
-          }
-        },
-        [
-          {
-            "last_modified_ledger_seq": 0,
-            "data": {
-              "contract_data": {
-                "ext": "v0",
-                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-                "key": {
-                  "vec": [
-                    {
-                      "symbol": "MilestoneEventCount"
-                    },
-                    {
-                      "u64": 1
-                    }
-                  ]
-                },
-                "durability": "persistent",
-                "val": {
-                  "u32": 10
-                }
-              }
-            },
-            "ext": "v0"
-          },
-          4096
         ]
       ],
       [
@@ -605,7 +380,7 @@
                       "val": {
                         "vec": [
                           {
-                            "symbol": "InTransit"
+                            "symbol": "Delivered"
                           }
                         ]
                       }
@@ -883,25 +658,6 @@
                         "key": {
                           "vec": [
                             {
-                              "symbol": "Role"
-                            },
-                            {
-                              "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                            }
-                          ]
-                        },
-                        "val": {
-                          "vec": [
-                            {
-                              "symbol": "Carrier"
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "vec": [
-                            {
                               "symbol": "ShipmentCount"
                             }
                           ]
@@ -1001,28 +757,6 @@
                         "key": {
                           "vec": [
                             {
-                              "symbol": "UserRole"
-                            },
-                            {
-                              "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                            },
-                            {
-                              "vec": [
-                                {
-                                  "symbol": "Carrier"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        "val": {
-                          "bool": true
-                        }
-                      },
-                      {
-                        "key": {
-                          "vec": [
-                            {
                               "symbol": "Version"
                             }
                           ]
@@ -1047,7 +781,7 @@
             "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
             "key": {
               "ledger_key_nonce": {
-                "nonce": 1033654523790656264
+                "nonce": 5541220902715666415
               }
             },
             "durability": "temporary"
@@ -1062,40 +796,7 @@
                 "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
                 "key": {
                   "ledger_key_nonce": {
-                    "nonce": 1033654523790656264
-                  }
-                },
-                "durability": "temporary",
-                "val": "void"
-              }
-            },
-            "ext": "v0"
-          },
-          6312000
-        ]
-      ],
-      [
-        {
-          "contract_data": {
-            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4",
-            "key": {
-              "ledger_key_nonce": {
-                "nonce": 4837995959683129791
-              }
-            },
-            "durability": "temporary"
-          }
-        },
-        [
-          {
-            "last_modified_ledger_seq": 0,
-            "data": {
-              "contract_data": {
-                "ext": "v0",
-                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4",
-                "key": {
-                  "ledger_key_nonce": {
-                    "nonce": 4837995959683129791
+                    "nonce": 5541220902715666415
                   }
                 },
                 "durability": "temporary",
@@ -1130,426 +831,5 @@
       ]
     ]
   },
-  "events": [
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_0"
-                },
-                {
-                  "bytes": "0101010101010101010101010101010101010101010101010101010101010101"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "bytes": "5ae6cbffa8ffadec2250da4aa71e72ffe432c2002b25b46ebbd24b4416b52dc6"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_1"
-                },
-                {
-                  "bytes": "0202020202020202020202020202020202020202020202020202020202020202"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 3
-                },
-                {
-                  "bytes": "e8ffb96033bb2cad3549780fa04718293422417a5f127d3ad345eb9f337f0bd5"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_2"
-                },
-                {
-                  "bytes": "0303030303030303030303030303030303030303030303030303030303030303"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 4
-                },
-                {
-                  "bytes": "451b675ed9b85365268ca022a1fc9a05ca71093eb3b789267eb14d25a34d9266"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_3"
-                },
-                {
-                  "bytes": "0404040404040404040404040404040404040404040404040404040404040404"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 5
-                },
-                {
-                  "bytes": "749dd0ff28db36d25faa6a1f6d78fed65a92ee390fa5214fcdde3983508df915"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_4"
-                },
-                {
-                  "bytes": "0505050505050505050505050505050505050505050505050505050505050505"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 6
-                },
-                {
-                  "bytes": "cf4efc9dc04754a02f93c09f092b2e1650f86b7fb61664d10af364ab3b6b84a4"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_5"
-                },
-                {
-                  "bytes": "0606060606060606060606060606060606060606060606060606060606060606"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 7
-                },
-                {
-                  "bytes": "f8c13cef7da1db0bbb190654ebc29459634615421f2ce3de01810f2dfbee7281"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_6"
-                },
-                {
-                  "bytes": "0707070707070707070707070707070707070707070707070707070707070707"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 8
-                },
-                {
-                  "bytes": "e78f2172729c499a64382fa17f155e083b5f1ed27c7a6875f32b398a97869496"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_7"
-                },
-                {
-                  "bytes": "0808080808080808080808080808080808080808080808080808080808080808"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 9
-                },
-                {
-                  "bytes": "563f38a0510eba0102abdc182bf7312551c330049645a37bac56bc75640c044e"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_8"
-                },
-                {
-                  "bytes": "0909090909090909090909090909090909090909090909090909090909090909"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 10
-                },
-                {
-                  "bytes": "5d68b503b0dad836e6ac0a5f78ecfa64ec55fc3abf81718848f785ba77886f22"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000003",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "milestone_recorded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
-                },
-                {
-                  "symbol": "checkpoint_9"
-                },
-                {
-                  "bytes": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                },
-                {
-                  "u32": 2
-                },
-                {
-                  "u32": 11
-                },
-                {
-                  "bytes": "a0e362b3f3894732be5ab97ed1b9a4e730babffd9442acc389a5ece080d107aa"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    }
-  ]
+  "events": []
 }

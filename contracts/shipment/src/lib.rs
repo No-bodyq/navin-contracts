@@ -1108,16 +1108,27 @@ impl NavinShipment {
         event_type: Symbol,
         event_counter: u32,
     ) -> BytesN<32> {
-        let mut payload = soroban_sdk::Bytes::new(&env);
-        payload.append(&soroban_sdk::Bytes::from_array(
-            &env,
-            &shipment_id.to_be_bytes(),
-        ));
+        use soroban_sdk::Bytes;
+
+        let mut payload = Bytes::new(&env);
+
+        // Domain prefix (HASH_DOMAIN_SHIPMENT = 0x01)
+        let domain = crate::event_topics::HASH_DOMAIN_SHIPMENT;
+        let domain_bytes = domain.to_be_bytes();
+        let domain_len = (domain_bytes.len() as u32).to_be_bytes();
+        payload.append(&Bytes::from_array(&env, &domain_len));
+        payload.append(&Bytes::from_slice(&env, &domain_bytes));
+
+        // Shipment ID (raw bytes)
+        payload.append(&Bytes::from_array(&env, &shipment_id.to_be_bytes()));
+
+        // Event type: use the same XDR encoding as generate_idempotency_key
+        // (as_bytes() of the &str produces the same result as XDR for symbol strings)
         payload.append(&event_type.clone().to_xdr(&env));
-        payload.append(&soroban_sdk::Bytes::from_array(
-            &env,
-            &event_counter.to_be_bytes(),
-        ));
+
+        // Event counter (raw bytes)
+        payload.append(&Bytes::from_array(&env, &event_counter.to_be_bytes()));
+
         env.crypto().sha256(&payload).into()
     }
 
@@ -2580,6 +2591,7 @@ impl NavinShipment {
     /// ```rust
     /// // contract.confirm_partial_delivery(&env, &receiver, 1, &hash, 50);
     /// ```
+    pub fn confirm_partial_delivery(
         env: Env,
         receiver: Address,
         shipment_id: u64,
@@ -2931,7 +2943,7 @@ impl NavinShipment {
 
         // Validate all hashes in milestones
         for (_, hash) in &milestones {
-            validation::validate_hash(hash)?;
+            validation::validate_hash(&hash)?;
         }
 
         // Verify shipment exists, carrier is assigned, and status
@@ -3629,8 +3641,10 @@ impl NavinShipment {
 
         require_admin_or_guardian(&env, &admin)?;
 
-        // Validate reason hash
-        validation::validate_hash(&reason_hash)?;
+        // Reason hash is mandatory; use a specific error rather than the generic InvalidHash.
+        if reason_hash.to_array().iter().all(|&b| b == 0) {
+            return Err(NavinError::DisputeReasonHashMissing);
+        }
 
         // Idempotency: reject duplicate (shipment_id, resolution, reason_hash) within the window.
         let mut payload = soroban_sdk::Bytes::new(&env);

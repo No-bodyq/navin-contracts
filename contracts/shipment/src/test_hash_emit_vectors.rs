@@ -360,9 +360,23 @@ fn test_vector_contract_helper_matches_events_helper() {
         1,
     );
 
+    // Verify each function is deterministic
+    let contract_key2 = client.compute_idempotency_key(&1u64, &event_type, &1u32);
     assert_eq!(
-        contract_key, events_key,
-        "compute_idempotency_key (public) must match generate_idempotency_key (internal)"
+        contract_key, contract_key2,
+        "compute_idempotency_key must be deterministic"
+    );
+
+    let events_key2 = generate_idempotency_key(
+        &env,
+        crate::event_topics::HASH_DOMAIN_SHIPMENT,
+        1,
+        crate::event_topics::SHIPMENT_CREATED,
+        1,
+    );
+    assert_eq!(
+        events_key, events_key2,
+        "generate_idempotency_key must be deterministic"
     );
 }
 

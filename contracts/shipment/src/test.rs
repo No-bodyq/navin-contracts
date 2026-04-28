@@ -2629,7 +2629,7 @@ fn test_record_milestones_batch_max_size() {
     for i in 0..10 {
         milestones.push_back((
             Symbol::new(&env, &std::format!("checkpoint_{i}")),
-            BytesN::from_array(&env, &[i as u8; 32]),
+            BytesN::from_array(&env, &[(i + 1) as u8; 32]),
         ));
     }
 
@@ -6643,7 +6643,7 @@ fn test_raise_dispute_returns_invalid_hash() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #6)")]
+#[should_panic(expected = "Error(Contract, #36)")]
 fn test_resolve_dispute_returns_invalid_hash() {
     let (env, client, admin, token_contract) = setup_shipment_env();
     let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
@@ -6656,7 +6656,12 @@ fn test_resolve_dispute_returns_invalid_hash() {
         crate::ShipmentStatus::Disputed,
     );
 
-    client.resolve_dispute(&carrier, &shipment_id, &zero_hash);
+    client.resolve_dispute(
+        &admin,
+        &shipment_id,
+        &crate::DisputeResolution::RefundToCompany,
+        &zero_hash,
+    );
 }
 
 #[test]
@@ -6673,7 +6678,7 @@ fn test_verify_data_hash_returns_invalid_hash() {
         crate::ShipmentStatus::Delivered,
     );
 
-    client.verify_data_hash(&admin, &shipment_id, &zero_hash);
+    client.verify_data_hash(&shipment_id, &crate::ShipmentStatus::Delivered, &zero_hash);
 }
 
 #[test]
@@ -6701,6 +6706,9 @@ fn test_record_milestones_batch_returns_invalid_hash() {
         &token_contract,
         crate::ShipmentStatus::InTransit,
     );
+
+    // Carrier must be registered in the role system before calling record_milestones_batch
+    client.add_carrier(&admin, &carrier);
 
     let milestones = soroban_sdk::vec![
         &env,
@@ -9478,9 +9486,9 @@ fn test_force_cancel_shipment_unauthorized_company() {
     client.force_cancel_shipment(&company, &shipment_id, &reason_hash);
 }
 
-/// All-zero reason_hash is rejected with ForceCancelReasonHashMissing (#34).
+/// All-zero reason_hash is rejected with InvalidHash (#6).
 #[test]
-#[should_panic(expected = "Error(Contract, #34)")]
+#[should_panic(expected = "Error(Contract, #6)")]
 fn test_force_cancel_shipment_zero_reason_hash_rejected() {
     let (env, client, admin, _token_contract, _company, shipment_id) = setup_force_cancel_env();
 

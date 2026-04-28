@@ -2086,6 +2086,7 @@ impl NavinShipment {
     /// * `NavinError::NotInitialized` - If contract is not initialized.
     /// * `NavinError::ShipmentNotFound` - If shipment doesn't exist.
     /// * `NavinError::Unauthorized` - If caller is neither the carrier nor admin.
+    /// * `NavinError::InvalidHash` - If data_hash is all zeros.
     /// * `NavinError::CarrierSuspended` - If the assigned carrier is suspended.
     /// * `NavinError::RateLimitExceeded` - If status was updated too recently (unless Admin).
     /// * `NavinError::InvalidStatus` - If transitioning to an improperly sequenced state.
@@ -2104,6 +2105,9 @@ impl NavinShipment {
         require_initialized(&env)?;
         require_not_paused(&env)?;
         caller.require_auth();
+
+        // Validate hash before storage
+        validation::validate_hash(&data_hash)?;
 
         let admin = storage::get_admin(&env);
         let mut shipment =
@@ -2445,6 +2449,7 @@ impl NavinShipment {
     /// * `NavinError::NotInitialized` - If contract is not initialized.
     /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
     /// * `NavinError::Unauthorized` - If called by an address other than the shipment receiver.
+    /// * `NavinError::InvalidHash` - If confirmation_hash is all zeros.
     /// * `NavinError::InvalidStatus` - If shipment is not in a transitable status to Delivered.
     ///
     /// # Examples
@@ -2460,6 +2465,9 @@ impl NavinShipment {
         require_initialized(&env)?;
         require_not_paused(&env)?;
         receiver.require_auth();
+
+        // Validate hash before storage
+        validation::validate_hash(&confirmation_hash)?;
 
         let mut shipment =
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
@@ -2549,7 +2557,29 @@ impl NavinShipment {
     /// shipment is in transit/checkpoint/partial states. Each call releases
     /// `release_percent` of `total_escrow`, and cumulative releases are bounded
     /// so they never exceed the escrow initially deposited.
-    pub fn confirm_partial_delivery(
+    ///
+    /// # Arguments
+    /// * `env` - Execution environment.
+    /// * `receiver` - Receiver address confirming the partial delivery.
+    /// * `shipment_id` - Identifier of the shipment.
+    /// * `confirmation_hash` - The proof-of-delivery hash for this partial confirmation.
+    /// * `release_percent` - Percentage of total escrow to release (1-100).
+    ///
+    /// # Returns
+    /// * `Result<(), NavinError>` - Ok on successful partial confirmation.
+    ///
+    /// # Errors
+    /// * `NavinError::NotInitialized` - If contract is not initialized.
+    /// * `NavinError::InvalidHash` - If confirmation_hash is all zeros.
+    /// * `NavinError::InvalidAmount` - If release_percent is 0 or > 100.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
+    /// * `NavinError::Unauthorized` - If called by an address other than the shipment receiver.
+    /// * `NavinError::InvalidStatus` - If shipment is not in a valid state for partial delivery.
+    ///
+    /// # Examples
+    /// ```rust
+    /// // contract.confirm_partial_delivery(&env, &receiver, 1, &hash, 50);
+    /// ```
         env: Env,
         receiver: Address,
         shipment_id: u64,
@@ -2559,6 +2589,9 @@ impl NavinShipment {
         require_initialized(&env)?;
         require_not_paused(&env)?;
         receiver.require_auth();
+
+        // Validate hash before storage
+        validation::validate_hash(&confirmation_hash)?;
 
         if release_percent == 0 || release_percent > 100 {
             return Err(NavinError::InvalidAmount);
@@ -2637,6 +2670,7 @@ impl NavinShipment {
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
     /// * `NavinError::Unauthorized` - If caller isn't a Carrier role.
+    /// * `NavinError::InvalidHash` - If data_hash is all zeros.
     /// * `NavinError::ShipmentNotFound` - If tracking context specifies an invalid shipment.
     ///
     /// # Examples
@@ -2659,6 +2693,9 @@ impl NavinShipment {
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
 
         require_not_finalized(&shipment)?;
+
+        // Validate hash before storage
+        validation::validate_hash(&data_hash)?;
 
         if shipment.carrier != carrier {
             return Err(NavinError::Unauthorized);
@@ -2691,6 +2728,7 @@ impl NavinShipment {
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
     /// * `NavinError::Unauthorized` - If caller isn't the assigned carrier.
+    /// * `NavinError::InvalidHash` - If data_hash is all zeros.
     /// * `NavinError::ShipmentNotFound` - If shipment instance targets missing entry.
     /// * `NavinError::InvalidTimestamp` - If provided ETA is strictly in the past or present.
     ///
@@ -2713,6 +2751,9 @@ impl NavinShipment {
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
 
         require_not_finalized(&shipment)?;
+
+        // Validate hash before storage
+        validation::validate_hash(&data_hash)?;
 
         if shipment.carrier != carrier {
             return Err(NavinError::Unauthorized);
@@ -2746,6 +2787,7 @@ impl NavinShipment {
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
     /// * `NavinError::Unauthorized` - If called by unassigned identity.
+    /// * `NavinError::InvalidHash` - If data_hash is all zeros.
     /// * `NavinError::CarrierSuspended` - If the carrier is suspended.
     /// * `NavinError::ShipmentNotFound` - If shipment instance targets missing entry.
     /// * `NavinError::InvalidStatus` - If tracked instance is not `InTransit`.
@@ -2772,6 +2814,9 @@ impl NavinShipment {
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
 
         require_not_finalized(&shipment)?;
+
+        // Validate hash before storage
+        validation::validate_hash(&data_hash)?;
 
         if shipment.carrier != carrier {
             return Err(NavinError::Unauthorized);
@@ -2852,6 +2897,7 @@ impl NavinShipment {
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
     /// * `NavinError::Unauthorized` - If called by unassigned identity.
+    /// * `NavinError::InvalidHash` - If any data_hash is all zeros.
     /// * `NavinError::CarrierSuspended` - If the carrier is suspended.
     /// * `NavinError::ShipmentNotFound` - If shipment instance targets missing entry.
     /// * `NavinError::InvalidStatus` - If tracked instance is not `InTransit`.
@@ -2883,6 +2929,11 @@ impl NavinShipment {
             return Err(NavinError::BatchTooLarge);
         }
 
+        // Validate all hashes in milestones
+        for (_, hash) in &milestones {
+            validation::validate_hash(hash)?;
+        }
+
         // Verify shipment exists, carrier is assigned, and status
         let shipment =
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
@@ -2900,12 +2951,10 @@ impl NavinShipment {
         // Validate all milestones before committing any (atomic operation)
         // This ensures that if any milestone is invalid, none are committed
         for milestone_tuple in milestones.iter() {
-            let data_hash = milestone_tuple.1.clone();
+            let data_hash = &milestone_tuple.1;
 
-            // Basic validation - ensure data_hash is valid
-            if data_hash.len() != 32 {
-                return Err(NavinError::InvalidHash);
-            }
+            // Validate hash
+            validation::validate_hash(data_hash)?;
         }
 
         // Enforce milestone event payload size guard
@@ -3015,6 +3064,7 @@ impl NavinShipment {
     ///
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
+    /// * `NavinError::InvalidHash` - If reason_hash is all zeros.
     /// * `NavinError::ShipmentNotFound` - If tracking context is invalid list element.
     /// * `NavinError::Unauthorized` - If called by unauthorized accounts.
     /// * `NavinError::ShipmentAlreadyCompleted` - If tracking context specified reached terminal states.
@@ -3032,6 +3082,9 @@ impl NavinShipment {
         require_initialized(&env)?;
         require_not_paused(&env)?;
         caller.require_auth();
+
+        // Validate hash before storage
+        validation::validate_hash(&reason_hash)?;
 
         let admin = storage::get_admin(&env);
         let mut shipment =
@@ -3114,7 +3167,7 @@ impl NavinShipment {
     /// * `NavinError::NotInitialized` - Contract not initialized.
     /// * `NavinError::Unauthorized` - Caller is not the admin.
     /// * `NavinError::ShipmentNotFound` - Shipment does not exist.
-    /// * `NavinError::ForceCancelReasonHashMissing` - `reason_hash` is all-zero.
+    /// * `NavinError::InvalidHash` - `reason_hash` is all zeros.
     /// * `NavinError::ShipmentAlreadyCompleted` - Shipment is already Delivered or Cancelled.
     ///
     /// # Examples
@@ -3137,7 +3190,7 @@ impl NavinShipment {
         }
 
         // Reason hash is mandatory and must be non-zero.
-        validate_hash(&reason_hash).map_err(|_| NavinError::ForceCancelReasonHashMissing)?;
+        validation::validate_hash(&reason_hash)?;
 
         let mut shipment =
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
@@ -3209,6 +3262,7 @@ impl NavinShipment {
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
     /// * `NavinError::Unauthorized` - If caller isn't contract admin instance.
+    /// * `NavinError::InvalidHash` - If new_wasm_hash is all zeros.
     /// * `NavinError::CounterOverflow` - If total tracking version identifier pointer triggers overflow.
     ///
     /// # Examples
@@ -3223,6 +3277,9 @@ impl NavinShipment {
     ) -> Result<(), NavinError> {
         require_initialized(&env)?;
         admin.require_auth();
+
+        // Validate hash before storage
+        validation::validate_hash(&new_wasm_hash)?;
 
         if storage::get_admin(&env) != admin {
             return Err(NavinError::Unauthorized);
@@ -3450,9 +3507,10 @@ impl NavinShipment {
     ///
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
-    /// * `NavinError::ShipmentNotFound` - If parameters index unresolvable target references configurations identifiers constraints matches.
-    /// * `NavinError::Unauthorized` - If resolving constraints mapping fails identifiers scopes validations check mapping instances boundaries checks definitions roles mapping assignments properties permissions restrictions validations pointers identifiers strings tokens handlers arrays identifiers arrays values identifiers arrays matches matches mappings mapping roles properties maps pointers validators maps mapping permissions mapped values pointers matches mapped roles restrictions mapping validators bounds validators identifiers fields validations mapped keys mapped validators fields fields mapping mapped arrays string mapped mapped properties validators string permissions maps string permissions keys mappings bound.
-    /// * `NavinError::ShipmentAlreadyCompleted` - If state evaluates illegal targets.
+    /// * `NavinError::InvalidHash` - If reason_hash is all zeros.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
+    /// * `NavinError::Unauthorized` - If caller is not involved in the shipment.
+    /// * `NavinError::ShipmentAlreadyCompleted` - If shipment is already completed.
     ///
     /// # Examples
     /// ```rust
@@ -3467,6 +3525,9 @@ impl NavinShipment {
         require_initialized(&env)?;
         require_not_paused(&env)?;
         caller.require_auth();
+
+        // Validate hash before storage
+        validation::validate_hash(&reason_hash)?;
 
         let mut shipment =
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
@@ -3554,7 +3615,7 @@ impl NavinShipment {
     /// * `NavinError::NotInitialized` - If contract is not initialized.
     /// * `NavinError::ShipmentNotFound` - If the shipment doesn't exist.
     /// * `NavinError::Unauthorized` - If called by a non-admin.
-    /// * `NavinError::DisputeReasonHashMissing` - If reason_hash is all zeros.
+    /// * `NavinError::InvalidHash` - If reason_hash is all zeros.
     pub fn resolve_dispute(
         env: Env,
         admin: Address,
@@ -3568,10 +3629,8 @@ impl NavinShipment {
 
         require_admin_or_guardian(&env, &admin)?;
 
-        // Validate reason hash is not empty
-        if reason_hash == BytesN::from_array(&env, &[0u8; 32]) {
-            return Err(NavinError::DisputeReasonHashMissing);
-        }
+        // Validate reason hash
+        validation::validate_hash(&reason_hash)?;
 
         // Idempotency: reject duplicate (shipment_id, resolution, reason_hash) within the window.
         let mut payload = soroban_sdk::Bytes::new(&env);
@@ -3665,20 +3724,21 @@ impl NavinShipment {
     /// New carrier must have Carrier role.
     ///
     /// # Arguments
-    /// * `env` - Execution environment context mapped tracking handler.
-    /// * `current_carrier` - Identity specifying event originating handlers instance.
-    /// * `new_carrier` - New carrier targeted parameter taking responsibility.
-    /// * `shipment_id` - Key object specifying mapping configurations instance sequence.
-    /// * `handoff_hash` - Validation mapping properties verification arrays format parameters payload.
+    /// * `env` - Execution environment.
+    /// * `current_carrier` - Current assigned carrier address.
+    /// * `new_carrier` - New carrier address to assign.
+    /// * `shipment_id` - ID of the shipment.
+    /// * `handoff_hash` - Hash of the handoff documentation.
     ///
     /// # Returns
-    /// * `Result<(), NavinError>` - Ok on successful tracker identity assignment switch.
+    /// * `Result<(), NavinError>` - Ok on successful handoff.
     ///
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
-    /// * `NavinError::Unauthorized` - If resolving executing bounds maps invalid permissions constraints checking.
-    /// * `NavinError::ShipmentNotFound` - If bound key identifiers specify missing pointer entries array fields values references maps values definitions constraints boundary pointers boundaries checks matches roles matches mapped restrictions keys pointers parameters hashes properties checks rules matches strings bounds check restrictions validations maps roles maps identifiers assignments values sizes limit matches matching mapping constraints roles validation handlers scopes values bounds.
-    /// * `NavinError::ShipmentAlreadyCompleted` - If configuration checks bounds limits evaluated properties limit boundary fields rules match terminal status tracking pointer identifiers strings.
+    /// * `NavinError::InvalidHash` - If handoff_hash is all zeros.
+    /// * `NavinError::Unauthorized` - If current_carrier is not the assigned carrier.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
+    /// * `NavinError::ShipmentAlreadyCompleted` - If shipment is already completed.
     ///
     /// # Examples
     /// ```rust
@@ -3700,6 +3760,9 @@ impl NavinShipment {
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
 
         require_not_finalized(&shipment)?;
+
+        // Validate hash before storage
+        validation::validate_hash(&handoff_hash)?;
 
         // Verify current carrier is the assigned carrier
         if shipment.carrier != current_carrier {
@@ -3748,20 +3811,21 @@ impl NavinShipment {
     /// only its `data_hash` is emitted on-chain following the Hash-and-Emit pattern.
     ///
     /// # Arguments
-    /// * `env` - Execution environment wrapper contexts instances format variables arrays mapped fields parameters bindings mappings validation matching variables references format map rules scopes mappings targets scopes properties bindings mappings context references format bindings sizes arrays values.
-    /// * `carrier` - Tracking address specifying mapped context boundaries mapped assignments limits pointer validations constraints checking identifiers boundaries limits pointer configurations constraints context values references formats map matching arrays instances string definitions parameters matches checks limits permissions rules string formats limits rules scopes configurations maps tokens contexts scopes mapping instances matches.
-    /// * `shipment_id` - Execution identifier reference binding sequence parameters formatting properties matches checking definitions sizes boundary arrays fields values bindings tracking identifier sequences parameters mapping limits bounds validation context limits formats values.
-    /// * `breach_type` - Parameter tracking mapped enum values binding sequence identifier maps pointers validations checking mapped roles parameters mapped map matching pointer formats parameters mapping context limits keys.
-    /// * `severity` - Severity level for downstream analytics and alerting (Low/Medium/High/Critical).
-    /// * `data_hash` - Configuration identifier string pointers limits bounds values matches arrays validation mapped strings format properties rules context bindings format array scopes references definitions maps matches validation sizes limits permissions validations.
+    /// * `env` - Execution environment.
+    /// * `carrier` - Carrier address reporting the breach.
+    /// * `shipment_id` - ID of the shipment.
+    /// * `breach_type` - Type of condition breach.
+    /// * `severity` - Severity level of the breach.
+    /// * `data_hash` - Hash of the breach data.
     ///
     /// # Returns
-    /// * `Result<(), NavinError>` - Ok on successful registry mapping array parameters matches array format limitations validation limit strings arrays parameters matching size context scopes values maps arrays constraints matching context sizes properties.
+    /// * `Result<(), NavinError>` - Ok on successful breach report.
     ///
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
-    /// * `NavinError::Unauthorized` - If resolving executing bounds maps invalid permissions.
-    /// * `NavinError::ShipmentNotFound` - If tracking context is invalid list element.
+    /// * `NavinError::InvalidHash` - If data_hash is all zeros.
+    /// * `NavinError::Unauthorized` - If caller is not the assigned carrier.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
     ///
     /// # Examples
     /// ```rust
@@ -3783,6 +3847,9 @@ impl NavinShipment {
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
 
         require_not_finalized(&shipment)?;
+
+        // Validate hash before storage
+        validation::validate_hash(&data_hash)?;
 
         // Only the assigned carrier for this shipment may report
         if shipment.carrier != carrier {
@@ -3865,16 +3932,17 @@ impl NavinShipment {
     /// `false` if delivered but hashes differ, and errors if the shipment does not exist.
     ///
     /// # Arguments
-    /// * `env` - Execution environment tracking mapped instances validation variables maps format boundary values fields mapped contexts matching references size parameter pointer definition format contexts.
-    /// * `shipment_id` - Identifying tracker mapping definitions arrays limits constraints binding values parameters mappings matches values matching variables scope sizes context properties configuration sequences format context rules bindings sequences arrays.
-    /// * `proof_hash` - Encrypted target references validating properties identifiers scope scopes variables.
+    /// * `env` - Execution environment.
+    /// * `shipment_id` - ID of the shipment.
+    /// * `proof_hash` - Hash to verify against stored confirmation hash.
     ///
     /// # Returns
-    /// * `Result<bool, NavinError>` - A boolean wrapper validating conditions logic identifiers values mappings rules limit format parameters checking sizes rules instances bindings context definitions matches size limits maps arrays context rules map sequences properties validation properties format constraints string values bindings contexts definitions scopes strings bounds limitations references tokens arrays maps configuration matching validation sizes rules checking.
+    /// * `Result<bool, NavinError>` - True if hashes match, false otherwise.
     ///
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
-    /// * `NavinError::ShipmentNotFound` - If tracking context specifies an invalid shipment.
+    /// * `NavinError::InvalidHash` - If proof_hash is all zeros.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
     ///
     /// # Examples
     /// ```rust
@@ -3886,6 +3954,9 @@ impl NavinShipment {
         proof_hash: BytesN<32>,
     ) -> Result<bool, NavinError> {
         require_initialized(&env)?;
+
+        // Validate hash
+        validation::validate_hash(&proof_hash)?;
 
         // Ensure the shipment exists
         if storage::get_shipment(&env, shipment_id).is_none() {
@@ -4623,6 +4694,7 @@ impl NavinShipment {
     ///
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
+    /// * `NavinError::InvalidHash` - If expected_hash is all zeros.
     /// * `NavinError::ShipmentNotFound` - If the shipment doesn't exist.
     /// * `NavinError::StatusHashNotFound` - If no hash was recorded for that status.
     ///
@@ -4637,6 +4709,9 @@ impl NavinShipment {
         expected_hash: BytesN<32>,
     ) -> Result<bool, NavinError> {
         require_initialized(&env)?;
+
+        // Validate hash
+        validation::validate_hash(&expected_hash)?;
 
         // Verify shipment exists
         if storage::get_shipment(&env, shipment_id).is_none() {

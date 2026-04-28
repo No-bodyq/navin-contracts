@@ -6581,49 +6581,135 @@ fn test_create_shipment_returns_invalid_hash() {
 }
 
 // NOTE: This test is commented out because the feature may not be fully implemented yet
-// #[test]
-// #[should_panic(expected = "Error(Contract, #6)")]
-// fn test_update_status_returns_invalid_hash() {
-//     let (env, client, admin, token_contract) = setup_shipment_env();
-//     let company = Address::generate(&env);
-//     let receiver = Address::generate(&env);
-//     let carrier = Address::generate(&env);
-//     let data_hash = BytesN::from_array(&env, &[1u8; 32]);
-//     let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
-//     let deadline = env.ledger().timestamp() + 3600;
-//
-//     client.initialize(&admin, &token_contract);
-//     client.add_company(&admin, &company);
-//
-//     let shipment_id = client.create_shipment(
-//         &company,
-//         &receiver,
-//         &carrier,
-//         &data_hash,
-//         &soroban_sdk::Vec::new(&env),
-//         &deadline,
-//     );
-//
-//     client.update_status(&carrier, &shipment_id, &ShipmentStatus::InTransit, &zero_hash);
-// }
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_update_status_returns_invalid_hash() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let company = Address::generate(&env);
+    let receiver = Address::generate(&env);
+    let carrier = Address::generate(&env);
+    let data_hash = BytesN::from_array(&env, &[1u8; 32]);
+    let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
+    let deadline = env.ledger().timestamp() + 3600;
+
+    client.initialize(&admin, &token_contract);
+    client.add_company(&admin, &company);
+
+    let shipment_id = client.create_shipment(
+        &company,
+        &receiver,
+        &carrier,
+        &data_hash,
+        &soroban_sdk::Vec::new(&env),
+        &deadline,
+    );
+
+    client.update_status(&carrier, &shipment_id, &ShipmentStatus::InTransit, &zero_hash);
+}
 
 // NOTE: This test is commented out because the feature may not be fully implemented yet
-// #[test]
-// #[should_panic(expected = "Error(Contract, #6)")]
-// fn test_confirm_delivery_returns_invalid_hash() {
-//     let (env, client, admin, token_contract) = setup_shipment_env();
-//     let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
-//
-//     let (receiver, _carrier, shipment_id) = setup_shipment_with_status(
-//         &env,
-//         &client,
-//         &admin,
-//         &token_contract,
-//         crate::ShipmentStatus::InTransit,
-//     );
-//
-//     client.confirm_delivery(&receiver, &shipment_id, &zero_hash);
-// }
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_confirm_delivery_returns_invalid_hash() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
+
+    let (receiver, _carrier, shipment_id) = setup_shipment_with_status(
+        &env,
+        &client,
+        &admin,
+        &token_contract,
+        crate::ShipmentStatus::InTransit,
+    );
+
+    client.confirm_delivery(&receiver, &shipment_id, &zero_hash);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_raise_dispute_returns_invalid_hash() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
+
+    let (_receiver, carrier, shipment_id) = setup_shipment_with_status(
+        &env,
+        &client,
+        &admin,
+        &token_contract,
+        crate::ShipmentStatus::InTransit,
+    );
+
+    client.raise_dispute(&carrier, &shipment_id, &zero_hash);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_resolve_dispute_returns_invalid_hash() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
+
+    let (_receiver, carrier, shipment_id) = setup_shipment_with_status(
+        &env,
+        &client,
+        &admin,
+        &token_contract,
+        crate::ShipmentStatus::Disputed,
+    );
+
+    client.resolve_dispute(&carrier, &shipment_id, &zero_hash);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_verify_data_hash_returns_invalid_hash() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
+
+    let (_receiver, _carrier, shipment_id) = setup_shipment_with_status(
+        &env,
+        &client,
+        &admin,
+        &token_contract,
+        crate::ShipmentStatus::Delivered,
+    );
+
+    client.verify_data_hash(&admin, &shipment_id, &zero_hash);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_upgrade_returns_invalid_hash() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
+
+    client.initialize(&admin, &token_contract);
+
+    client.upgrade(&admin, &zero_hash, &2u32);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_record_milestones_batch_returns_invalid_hash() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
+    let valid_hash = BytesN::from_array(&env, &[1u8; 32]);
+
+    let (_receiver, carrier, shipment_id) = setup_shipment_with_status(
+        &env,
+        &client,
+        &admin,
+        &token_contract,
+        crate::ShipmentStatus::InTransit,
+    );
+
+    let milestones = soroban_sdk::vec![
+        &env,
+        (Symbol::new(&env, "checkpoint1"), valid_hash),
+        (Symbol::new(&env, "checkpoint2"), zero_hash),
+    ];
+
+    client.record_milestones_batch(&carrier, &shipment_id, &milestones);
+}
 
 // ============= Error #11: CounterOverflow Tests =============
 

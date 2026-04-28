@@ -1120,6 +1120,30 @@ impl NavinShipment {
         })
     }
 
+    /// Retrieve a compact summary of shipment counts aggregated by status.
+    ///
+    /// # Arguments
+    /// * `env` - Execution environment.
+    ///
+    /// # Returns
+    /// * `Result<ShipmentStatusSummary, NavinError>` - Summary of counts for all statuses.
+    ///
+    /// # Errors
+    /// * `NavinError::NotInitialized` - If contract is not initialized.
+    pub fn get_status_summary(env: Env) -> Result<ShipmentStatusSummary, NavinError> {
+        require_initialized(&env)?;
+        Ok(ShipmentStatusSummary {
+            created: storage::get_status_count(&env, &ShipmentStatus::Created),
+            in_transit: storage::get_status_count(&env, &ShipmentStatus::InTransit),
+            at_checkpoint: storage::get_status_count(&env, &ShipmentStatus::AtCheckpoint),
+            partially_delivered: storage::get_status_count(&env, &ShipmentStatus::PartiallyDelivered),
+            delivered: storage::get_status_count(&env, &ShipmentStatus::Delivered),
+            disputed: storage::get_status_count(&env, &ShipmentStatus::Disputed),
+            cancelled: storage::get_status_count(&env, &ShipmentStatus::Cancelled),
+        })
+    }
+
+
     /// Get the deterministic SHA-256 checksum of critical config fields.
     ///
     /// This query exposes the config checksum to help indexers and operators

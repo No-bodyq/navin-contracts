@@ -6107,6 +6107,63 @@ fn test_analytics_batch_and_cancel() {
     );
 }
 
+#[test]
+fn test_get_status_summary_empty() {
+    let (_env, client, admin, token_contract) = setup_shipment_env();
+    client.initialize(&admin, &token_contract);
+
+    let summary = client.get_status_summary();
+    assert_eq!(summary.created, 0);
+    assert_eq!(summary.in_transit, 0);
+    assert_eq!(summary.at_checkpoint, 0);
+    assert_eq!(summary.partially_delivered, 0);
+    assert_eq!(summary.delivered, 0);
+    assert_eq!(summary.disputed, 0);
+    assert_eq!(summary.cancelled, 0);
+}
+
+#[test]
+fn test_get_status_summary_populated() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let company = Address::generate(&env);
+    let receiver = Address::generate(&env);
+    let carrier = Address::generate(&env);
+    let data_hash = BytesN::from_array(&env, &[1u8; 32]);
+    let deadline = env.ledger().timestamp() + 3600;
+
+    client.initialize(&admin, &token_contract);
+    client.add_company(&admin, &company);
+
+    // Create 3 shipments
+    for i in 1..=3 {
+        client.create_shipment(
+            &company,
+            &receiver,
+            &carrier,
+            &BytesN::from_array(&env, &[i as u8; 32]),
+            &soroban_sdk::Vec::new(&env),
+            &deadline,
+        );
+    }
+
+    // Status: 3 Created
+    let summary = client.get_status_summary();
+    assert_eq!(summary.created, 3);
+
+    // Update 1 to InTransit
+    client.update_status(&carrier, &1, &ShipmentStatus::InTransit, &data_hash);
+
+    // Update 1 to AtCheckpoint
+    client.update_status(&carrier, &2, &ShipmentStatus::AtCheckpoint, &data_hash);
+
+    let summary = client.get_status_summary();
+    assert_eq!(summary.created, 1);
+    assert_eq!(summary.in_transit, 1);
+    assert_eq!(summary.at_checkpoint, 1);
+    assert_eq!(summary.delivered, 0);
+}
+
+
 // ============= Shipment Limit Tests =============
 
 #[test]

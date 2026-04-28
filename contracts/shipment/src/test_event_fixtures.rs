@@ -31,6 +31,7 @@ extern crate std;
 use crate::{test_utils, NavinShipment, NavinShipmentClient};
 use soroban_sdk::{
     testutils::{Address as _, Events},
+    token::StellarAssetClient,
     Address, BytesN, Env, Symbol, TryFromVal, Vec,
 };
 use std::string::ToString;
@@ -53,6 +54,8 @@ fn fixture_env() -> (
     let token_address = env
         .register_stellar_asset_contract_v2(admin.clone())
         .address();
+
+    StellarAssetClient::new(&env, &token_address).mint(&company, &10_000_000i128);
 
     let shipment_addr = env.register(NavinShipment, ());
     let client = NavinShipmentClient::new(&env, &shipment_addr);
@@ -477,10 +480,10 @@ fn test_all_fixtures_emit_expected_topics() {
         &Vec::new(&env),
         &deadline,
     );
+    let mut found = topics_emitted(&env);
 
     client.raise_dispute(&company, &shipment_id, &data_hash);
-
-    let found = topics_emitted(&env);
+    found.extend(topics_emitted(&env));
 
     assert!(
         found.contains(&crate::event_topics::SHIPMENT_CREATED.to_string()),

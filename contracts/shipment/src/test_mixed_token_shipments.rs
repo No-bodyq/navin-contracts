@@ -21,7 +21,7 @@ extern crate std;
 
 use crate::{test_utils, types::ShipmentStatus, NavinShipment, NavinShipmentClient};
 use navin_token::NavinTokenClient;
-use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, IntoVal, Vec};
+use soroban_sdk::{testutils::Address as _, token::StellarAssetClient, Address, BytesN, Env, IntoVal, Vec};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -47,13 +47,14 @@ fn deploy_nvn(env: &Env, admin: &Address) -> Address {
     addr
 }
 
-/// Mint `amount` tokens on any SEP-41-compatible contract.
-fn mint(env: &Env, token: &Address, admin: &Address, to: &Address, amount: i128) {
-    let mut args: Vec<soroban_sdk::Val> = Vec::new(env);
-    args.push_back(admin.clone().into_val(env));
-    args.push_back(to.clone().into_val(env));
-    args.push_back(amount.into_val(env));
-    env.invoke_contract::<()>(token, &soroban_sdk::symbol_short!("mint"), args);
+/// Mint `amount` SAC tokens to `to` (SAC mint takes `(to, amount)` — no admin arg).
+fn mint_sac(env: &Env, token: &Address, to: &Address, amount: i128) {
+    StellarAssetClient::new(env, token).mint(to, &amount);
+}
+
+/// Mint `amount` NavinToken tokens to `to` (NavinToken mint takes `(admin, to, amount)`).
+fn mint_nvn(env: &Env, token: &Address, admin: &Address, to: &Address, amount: i128) {
+    NavinTokenClient::new(env, token).mint(admin, to, &amount);
 }
 
 fn balance(env: &Env, token: &Address, who: &Address) -> i128 {
@@ -122,8 +123,8 @@ fn test_sac_deposit_does_not_affect_nvn_balance() {
     let ctx = setup();
     let amount = 1_000i128;
 
-    mint(&ctx.env, &ctx.token_sac, &ctx.admin, &ctx.company, amount);
-    mint(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
+    mint_sac(&ctx.env, &ctx.token_sac, &ctx.company, amount);
+    mint_nvn(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
 
     let deadline = ctx.env.ledger().timestamp() + 3600;
     let id_sac = ctx.client_sac.create_shipment(
@@ -160,8 +161,8 @@ fn test_nvn_deposit_does_not_affect_sac_balance() {
     let ctx = setup();
     let amount = 500i128;
 
-    mint(&ctx.env, &ctx.token_sac, &ctx.admin, &ctx.company, amount);
-    mint(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
+    mint_sac(&ctx.env, &ctx.token_sac, &ctx.company, amount);
+    mint_nvn(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
 
     let deadline = ctx.env.ledger().timestamp() + 3600;
     let id_nvn = ctx.client_nvn.create_shipment(
@@ -205,8 +206,8 @@ fn test_concurrent_deliver_balance_isolation() {
     let amount_a = 800i128;
     let amount_b = 600i128;
 
-    mint(&ctx.env, &ctx.token_sac, &ctx.admin, &ctx.company, amount_a);
-    mint(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount_b);
+    mint_sac(&ctx.env, &ctx.token_sac, &ctx.company, amount_a);
+    mint_nvn(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount_b);
 
     let deadline = ctx.env.ledger().timestamp() + 3600;
 
@@ -286,8 +287,8 @@ fn test_sac_refund_does_not_affect_nvn_escrow() {
     let ctx = setup();
     let amount = 400i128;
 
-    mint(&ctx.env, &ctx.token_sac, &ctx.admin, &ctx.company, amount);
-    mint(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
+    mint_sac(&ctx.env, &ctx.token_sac, &ctx.company, amount);
+    mint_nvn(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
 
     let deadline = ctx.env.ledger().timestamp() + 3600;
 
@@ -342,8 +343,8 @@ fn test_nvn_dispute_does_not_affect_sac_escrow() {
     let ctx = setup();
     let amount = 300i128;
 
-    mint(&ctx.env, &ctx.token_sac, &ctx.admin, &ctx.company, amount);
-    mint(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
+    mint_sac(&ctx.env, &ctx.token_sac, &ctx.company, amount);
+    mint_nvn(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
 
     let deadline = ctx.env.ledger().timestamp() + 3600;
 
@@ -391,8 +392,8 @@ fn test_milestone_payments_isolated_per_token() {
     let ctx = setup();
     let amount = 1_000i128;
 
-    mint(&ctx.env, &ctx.token_sac, &ctx.admin, &ctx.company, amount);
-    mint(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
+    mint_sac(&ctx.env, &ctx.token_sac, &ctx.company, amount);
+    mint_nvn(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount);
 
     let deadline = ctx.env.ledger().timestamp() + 3600;
 
@@ -490,20 +491,8 @@ fn test_escrow_balance_counters_are_per_contract() {
     let amount_sac = 200i128;
     let amount_nvn = 700i128;
 
-    mint(
-        &ctx.env,
-        &ctx.token_sac,
-        &ctx.admin,
-        &ctx.company,
-        amount_sac,
-    );
-    mint(
-        &ctx.env,
-        &ctx.token_nvn,
-        &ctx.admin,
-        &ctx.company,
-        amount_nvn,
-    );
+    mint_sac(&ctx.env, &ctx.token_sac, &ctx.company, amount_sac);
+    mint_nvn(&ctx.env, &ctx.token_nvn, &ctx.admin, &ctx.company, amount_nvn);
 
     let deadline = ctx.env.ledger().timestamp() + 3600;
 

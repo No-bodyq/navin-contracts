@@ -73,8 +73,6 @@
 //! 3. Update the TypeScript/Python snippets above if the serialization changes.
 //! 4. Commit with a note explaining why the vectors changed.
 
-#![cfg(test)]
-
 extern crate std;
 
 use crate::events::generate_idempotency_key;

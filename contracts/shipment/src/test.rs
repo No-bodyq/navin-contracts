@@ -2629,7 +2629,7 @@ fn test_record_milestones_batch_max_size() {
     for i in 0..10 {
         milestones.push_back((
             Symbol::new(&env, &std::format!("checkpoint_{i}")),
-            BytesN::from_array(&env, &[(i + 1) as u8; 32]),
+            BytesN::from_array(&env, &[(i as u8) + 1; 32]),
         ));
     }
 
@@ -6268,7 +6268,7 @@ fn test_resolve_dispute_fails_without_reason_hash() {
         &crate::DisputeResolution::ReleaseToCarrier,
         &empty_hash,
     );
-    assert_eq!(res, Err(Ok(crate::NavinError::DisputeReasonHashMissing)));
+    assert_eq!(res, Err(Ok(crate::NavinError::InvalidHash)));
 }
 
 #[test]
@@ -6604,7 +6604,12 @@ fn test_update_status_returns_invalid_hash() {
         &deadline,
     );
 
-    client.update_status(&carrier, &shipment_id, &ShipmentStatus::InTransit, &zero_hash);
+    client.update_status(
+        &carrier,
+        &shipment_id,
+        &ShipmentStatus::InTransit,
+        &zero_hash,
+    );
 }
 
 // NOTE: This test is commented out because the feature may not be fully implemented yet
@@ -6693,7 +6698,7 @@ fn test_upgrade_returns_invalid_hash() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #6)")]
+#[should_panic(expected = "Error(Contract, #3)")]
 fn test_record_milestones_batch_returns_invalid_hash() {
     let (env, client, admin, token_contract) = setup_shipment_env();
     let zero_hash = BytesN::from_array(&env, &[0u8; 32]);

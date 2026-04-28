@@ -2098,6 +2098,45 @@ impl NavinShipment {
         Ok(shipment.receiver)
     }
 
+    /// Retrieve the immutable sender (creator) identity for a shipment.
+    ///
+    /// # Arguments
+    /// * `env` - Execution environment.
+    /// * `shipment_id` - ID of the shipment.
+    ///
+    /// # Returns
+    /// * `Result<Address, NavinError>` - Address that originally created the shipment.
+    ///
+    /// # Errors
+    /// * `NavinError::NotInitialized` - If contract is not initialized.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
+    pub fn get_shipment_sender(env: Env, shipment_id: u64) -> Result<Address, NavinError> {
+        require_initialized(&env)?;
+        let shipment =
+            storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
+        Ok(shipment.sender)
+    }
+
+    /// Retrieve the immutable carrier identity for a shipment.
+    ///
+    /// # Arguments
+    /// * `env` - Execution environment.
+    /// * `shipment_id` - ID of the shipment.
+    ///
+    /// # Returns
+    /// * `Result<Address, NavinError>` - Address designated as shipment carrier at creation.
+    ///
+    /// # Errors
+    /// * `NavinError::NotInitialized` - If contract is not initialized.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
+    pub fn get_shipment_carrier(env: Env, shipment_id: u64) -> Result<Address, NavinError> {
+        require_initialized(&env)?;
+        let shipment =
+            storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
+        Ok(shipment.carrier)
+    }
+
+
     /// Return read-only diagnostics that help operators triage restore requirements.
     ///
     /// This query does not mutate state. It classifies the shipment ID as active,

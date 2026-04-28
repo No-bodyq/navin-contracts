@@ -1178,6 +1178,75 @@ fn test_get_shipment_receiver_fails_for_invalid_id() {
     client.get_shipment_receiver(&999);
 }
 
+#[test]
+fn test_get_shipment_sender_returns_sender_for_valid_id() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let company = Address::generate(&env);
+    let receiver = Address::generate(&env);
+    let carrier = Address::generate(&env);
+    let data_hash = BytesN::from_array(&env, &[13u8; 32]);
+    let deadline = env.ledger().timestamp() + 3600;
+
+    client.initialize(&admin, &token_contract);
+    client.add_company(&admin, &company);
+
+    let shipment_id = client.create_shipment(
+        &company,
+        &receiver,
+        &carrier,
+        &data_hash,
+        &soroban_sdk::Vec::new(&env),
+        &deadline,
+    );
+
+    assert_eq!(client.get_shipment_sender(&shipment_id), company);
+}
+
+#[test]
+fn test_get_shipment_carrier_returns_carrier_for_valid_id() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let company = Address::generate(&env);
+    let receiver = Address::generate(&env);
+    let carrier = Address::generate(&env);
+    let data_hash = BytesN::from_array(&env, &[14u8; 32]);
+    let deadline = env.ledger().timestamp() + 3600;
+
+    client.initialize(&admin, &token_contract);
+    client.add_company(&admin, &company);
+
+    let shipment_id = client.create_shipment(
+        &company,
+        &receiver,
+        &carrier,
+        &data_hash,
+        &soroban_sdk::Vec::new(&env),
+        &deadline,
+    );
+
+    assert_eq!(client.get_shipment_carrier(&shipment_id), carrier);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn test_get_shipment_sender_fails_for_invalid_id() {
+    let (_env, client, admin, token_contract) = setup_shipment_env();
+
+    client.initialize(&admin, &token_contract);
+
+    client.get_shipment_sender(&999);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn test_get_shipment_carrier_fails_for_invalid_id() {
+    let (_env, client, admin, token_contract) = setup_shipment_env();
+
+    client.initialize(&admin, &token_contract);
+
+    client.get_shipment_carrier(&999);
+}
+
+
 // ============= Geofence Event Tests =============
 
 #[test]

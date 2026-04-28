@@ -6656,7 +6656,7 @@ fn test_resolve_dispute_returns_invalid_hash() {
         crate::ShipmentStatus::Disputed,
     );
 
-    client.resolve_dispute(&carrier, &shipment_id, &zero_hash);
+    client.resolve_dispute(&carrier, &shipment_id, &crate::DisputeResolution::RefundToCompany, &zero_hash);
 }
 
 #[test]
@@ -6673,7 +6673,7 @@ fn test_verify_data_hash_returns_invalid_hash() {
         crate::ShipmentStatus::Delivered,
     );
 
-    client.verify_data_hash(&admin, &shipment_id, &zero_hash);
+    client.verify_data_hash(&shipment_id, &crate::ShipmentStatus::Delivered, &zero_hash);
 }
 
 #[test]

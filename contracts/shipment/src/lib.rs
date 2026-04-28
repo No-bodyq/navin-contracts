@@ -65,6 +65,24 @@ mod test_utils;
 #[cfg(test)]
 mod test_verification;
 
+// ── Fuzz / property-based test harnesses ─────────────────────────────────────
+#[cfg(test)]
+mod fuzz_storage_operations;
+#[cfg(test)]
+mod fuzz_ttl_management;
+#[cfg(test)]
+mod fuzz_escrow_lifecycle;
+#[cfg(test)]
+mod fuzz_escrow_arithmetic;
+#[cfg(test)]
+mod fuzz_milestone_releases;
+#[cfg(test)]
+mod fuzz_rbac_authorization;
+#[cfg(test)]
+mod fuzz_role_assignment;
+#[cfg(test)]
+mod fuzz_wallet_auth_integration;
+
 pub use config::*;
 pub use consistency::*;
 pub use diagnostics::*;
@@ -2580,6 +2598,7 @@ impl NavinShipment {
     /// ```rust
     /// // contract.confirm_partial_delivery(&env, &receiver, 1, &hash, 50);
     /// ```
+    pub fn confirm_partial_delivery(
         env: Env,
         receiver: Address,
         shipment_id: u64,
@@ -2931,7 +2950,7 @@ impl NavinShipment {
 
         // Validate all hashes in milestones
         for (_, hash) in &milestones {
-            validation::validate_hash(hash)?;
+            validation::validate_hash(&hash)?;
         }
 
         // Verify shipment exists, carrier is assigned, and status

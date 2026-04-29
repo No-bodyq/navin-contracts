@@ -51,6 +51,10 @@ mod test_auth;
 #[cfg(test)]
 mod test_auto_dispute;
 #[cfg(test)]
+mod test_carrier_relationship;
+#[cfg(test)]
+mod test_creation_quota;
+#[cfg(test)]
 mod test_diagnostics;
 #[cfg(test)]
 mod test_hash_domain_separation;
@@ -61,6 +65,10 @@ mod test_panic_free_invariants;
 #[cfg(test)]
 mod test_pause;
 #[cfg(test)]
+mod test_precondition_guards;
+#[cfg(test)]
+mod test_proposal_digest;
+#[cfg(test)]
 mod test_require_auth_for_args;
 #[cfg(test)]
 mod test_signature_argument_ordering;
@@ -70,30 +78,22 @@ mod test_suspension;
 mod test_utils;
 #[cfg(test)]
 mod test_verification;
-#[cfg(test)]
-mod test_precondition_guards;
-#[cfg(test)]
-mod test_carrier_relationship;
-#[cfg(test)]
-mod test_creation_quota;
-#[cfg(test)]
-mod test_proposal_digest;
 
 // ── Fuzz / property-based test harnesses ─────────────────────────────────────
 #[cfg(test)]
-mod fuzz_storage_operations;
-#[cfg(test)]
-mod fuzz_ttl_management;
+mod fuzz_escrow_arithmetic;
 #[cfg(test)]
 mod fuzz_escrow_lifecycle;
-#[cfg(test)]
-mod fuzz_escrow_arithmetic;
 #[cfg(test)]
 mod fuzz_milestone_releases;
 #[cfg(test)]
 mod fuzz_rbac_authorization;
 #[cfg(test)]
 mod fuzz_role_assignment;
+#[cfg(test)]
+mod fuzz_storage_operations;
+#[cfg(test)]
+mod fuzz_ttl_management;
 #[cfg(test)]
 mod fuzz_wallet_auth_integration;
 
@@ -1120,6 +1120,54 @@ impl NavinShipment {
         })
     }
 
+    /// Retrieve a compact summary of shipment counts aggregated by status.
+    ///
+    /// # Arguments
+    /// * `env` - Execution environment.
+    ///
+    /// # Returns
+    /// * `Result<ShipmentStatusSummary, NavinError>` - Summary of counts for all statuses.
+    ///
+    /// # Errors
+    /// * `NavinError::NotInitialized` - If contract is not initialized.
+    pub fn get_status_summary(env: Env) -> Result<ShipmentStatusSummary, NavinError> {
+        require_initialized(&env)?;
+        Ok(ShipmentStatusSummary {
+            created: storage::get_status_count(&env, &ShipmentStatus::Created),
+            in_transit: storage::get_status_count(&env, &ShipmentStatus::InTransit),
+            at_checkpoint: storage::get_status_count(&env, &ShipmentStatus::AtCheckpoint),
+            partially_delivered: storage::get_status_count(
+                &env,
+                &ShipmentStatus::PartiallyDelivered,
+            ),
+            delivered: storage::get_status_count(&env, &ShipmentStatus::Delivered),
+            disputed: storage::get_status_count(&env, &ShipmentStatus::Disputed),
+            cancelled: storage::get_status_count(&env, &ShipmentStatus::Cancelled),
+        })
+    }
+
+    /// Retrieve the total number of non-terminal shipments currently tracked.
+    ///
+    /// Non-terminal shipments are those in one of the following states:
+    /// 'Created', 'InTransit', 'AtCheckpoint', or 'PartiallyDelivered'.
+    ///
+    /// # Arguments
+    /// * `env` - Execution environment.
+    ///
+    /// # Returns
+    /// * `Result<u64, NavinError>` - Total count of active (non-terminal) shipments.
+    ///
+    /// # Errors
+    /// * `NavinError::NotInitialized` - If contract is not initialized.
+    pub fn get_non_terminal_count(env: Env) -> Result<u64, NavinError> {
+        require_initialized(&env)?;
+        let count = storage::get_status_count(&env, &ShipmentStatus::Created)
+            + storage::get_status_count(&env, &ShipmentStatus::InTransit)
+            + storage::get_status_count(&env, &ShipmentStatus::AtCheckpoint)
+            + storage::get_status_count(&env, &ShipmentStatus::PartiallyDelivered);
+        Ok(count)
+    }
+
     /// Get the deterministic SHA-256 checksum of critical config fields.
     ///
     /// This query exposes the config checksum to help indexers and operators
@@ -1942,13 +1990,12 @@ impl NavinShipment {
             let cfg = config::get_config(&env);
             if cfg.creation_quota_max > 0 {
                 let now_ts = env.ledger().timestamp();
-                let mut tracker =
-                    storage::get_creation_quota(&env, &sender).unwrap_or(
-                        crate::types::CreationQuotaTracker {
-                            count: 0,
-                            window_start: now_ts,
-                        },
-                    );
+                let mut tracker = storage::get_creation_quota(&env, &sender).unwrap_or(
+                    crate::types::CreationQuotaTracker {
+                        count: 0,
+                        window_start: now_ts,
+                    },
+                );
                 if now_ts >= tracker.window_start + cfg.creation_quota_window_seconds {
                     tracker.window_start = now_ts;
                     tracker.count = 0;
@@ -2101,6 +2148,7 @@ impl NavinShipment {
     }
 
     /// Retrieve the creation timestamp for a shipment.
+    /// Retrieve the immutable sender (creator) identity for a shipment.
     ///
     /// # Arguments
     /// * `env` - Execution environment.
@@ -2116,6 +2164,19 @@ impl NavinShipment {
     }
 
     /// Retrieve the last update timestamp for a shipment.
+    /// * `Result<Address, NavinError>` - Address that originally created the shipment.
+    ///
+    /// # Errors
+    /// * `NavinError::NotInitialized` - If contract is not initialized.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
+    pub fn get_shipment_sender(env: Env, shipment_id: u64) -> Result<Address, NavinError> {
+        require_initialized(&env)?;
+        let shipment =
+            storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
+        Ok(shipment.sender)
+    }
+
+    /// Retrieve the immutable carrier identity for a shipment.
     ///
     /// # Arguments
     /// * `env` - Execution environment.
@@ -2128,6 +2189,16 @@ impl NavinShipment {
         let shipment =
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
         Ok(shipment.updated_at)
+    /// * `Result<Address, NavinError>` - Address designated as shipment carrier at creation.
+    ///
+    /// # Errors
+    /// * `NavinError::NotInitialized` - If contract is not initialized.
+    /// * `NavinError::ShipmentNotFound` - If shipment does not exist.
+    pub fn get_shipment_carrier(env: Env, shipment_id: u64) -> Result<Address, NavinError> {
+        require_initialized(&env)?;
+        let shipment =
+            storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
+        Ok(shipment.carrier)
     }
 
     /// Return read-only diagnostics that help operators triage restore requirements.
@@ -4762,8 +4833,10 @@ impl NavinShipment {
         env.events()
             .publish((symbol_short!("propose"),), (proposal_id, proposer, action));
         // Emit digest event so off-chain indexers can capture it without a query.
-        env.events()
-            .publish((Symbol::new(&env, "proposal_digest"),), (proposal_id, digest_hash));
+        env.events().publish(
+            (Symbol::new(&env, "proposal_digest"),),
+            (proposal_id, digest_hash),
+        );
 
         Ok(proposal_id)
     }
@@ -5612,10 +5685,7 @@ impl NavinShipment {
     ///
     /// # Errors
     /// * `NavinError::NotInitialized` - If contract is not initialized.
-    pub fn get_creation_quota_status(
-        env: Env,
-        company: Address,
-    ) -> Result<(u32, u32), NavinError> {
+    pub fn get_creation_quota_status(env: Env, company: Address) -> Result<(u32, u32), NavinError> {
         require_initialized(&env)?;
         let cfg = config::get_config(&env);
 
@@ -5749,12 +5819,11 @@ fn check_and_update_creation_quota(env: &Env, company: &Address) -> Result<(), N
     }
 
     let now = env.ledger().timestamp();
-    let mut tracker = storage::get_creation_quota(env, company).unwrap_or(
-        crate::types::CreationQuotaTracker {
+    let mut tracker =
+        storage::get_creation_quota(env, company).unwrap_or(crate::types::CreationQuotaTracker {
             count: 0,
             window_start: now,
-        },
-    );
+        });
 
     // Roll window if expired.
     if now >= tracker.window_start + cfg.creation_quota_window_seconds {

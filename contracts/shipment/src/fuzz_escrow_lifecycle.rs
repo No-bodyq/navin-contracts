@@ -87,7 +87,14 @@ fn create_shipment(
     let receiver = Address::generate(env);
     let data_hash = hash_from_seed(env, seed);
     let deadline = env.ledger().timestamp() + 86_400 * 30;
-    client.create_shipment(company, &receiver, carrier, &data_hash, &Vec::new(env), &deadline)
+    client.create_shipment(
+        company,
+        &receiver,
+        carrier,
+        &data_hash,
+        &Vec::new(env),
+        &deadline,
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,13 +180,8 @@ fn fuzz_escrow_deposit_rejects_invalid_amounts() {
     let iterations = fuzz_iterations();
 
     // Invalid amounts to test
-    let invalid_amounts: std::vec::Vec<i128> = std::vec![
-        0,
-        -1,
-        -1000,
-        i128::MIN,
-        -1_000_000_000_000_000_i128,
-    ];
+    let invalid_amounts: std::vec::Vec<i128> =
+        std::vec![0, -1, -1000, i128::MIN, -1_000_000_000_000_000_i128,];
 
     for (i, &amount) in invalid_amounts.iter().enumerate() {
         let seed = xorshift64(&mut rng);

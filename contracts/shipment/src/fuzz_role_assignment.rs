@@ -102,17 +102,11 @@ fn fuzz_role_only_admin_assigns_company() {
 
         // Non-admin cannot assign company role
         let result = client.try_add_company(&non_admin, &target);
-        assert!(
-            result.is_err(),
-            "Non-admin must not assign company role"
-        );
+        assert!(result.is_err(), "Non-admin must not assign company role");
 
         // Admin can assign company role
         let result = client.try_add_company(&admin, &target);
-        assert!(
-            result.is_ok(),
-            "Admin must be able to assign company role"
-        );
+        assert!(result.is_ok(), "Admin must be able to assign company role");
     }
 }
 
@@ -133,16 +127,10 @@ fn fuzz_role_only_admin_assigns_carrier() {
         let target = Address::generate(&env);
 
         let result = client.try_add_carrier(&non_admin, &target);
-        assert!(
-            result.is_err(),
-            "Non-admin must not assign carrier role"
-        );
+        assert!(result.is_err(), "Non-admin must not assign carrier role");
 
         let result = client.try_add_carrier(&admin, &target);
-        assert!(
-            result.is_ok(),
-            "Admin must be able to assign carrier role"
-        );
+        assert!(result.is_ok(), "Admin must be able to assign carrier role");
     }
 }
 
@@ -166,17 +154,11 @@ fn fuzz_role_only_admin_revokes() {
 
         // Non-admin cannot revoke
         let result = client.try_revoke_role(&non_admin, &target);
-        assert!(
-            result.is_err(),
-            "Non-admin must not revoke roles"
-        );
+        assert!(result.is_err(), "Non-admin must not revoke roles");
 
         // Admin can revoke
         let result = client.try_revoke_role(&admin, &target);
-        assert!(
-            result.is_ok(),
-            "Admin must be able to revoke roles"
-        );
+        assert!(result.is_ok(), "Admin must be able to revoke roles");
     }
 }
 
@@ -200,17 +182,11 @@ fn fuzz_role_only_admin_suspends_carrier() {
 
         // Non-admin cannot suspend
         let result = client.try_suspend_carrier(&non_admin, &carrier);
-        assert!(
-            result.is_err(),
-            "Non-admin must not suspend carrier"
-        );
+        assert!(result.is_err(), "Non-admin must not suspend carrier");
 
         // Admin can suspend
         let result = client.try_suspend_carrier(&admin, &carrier);
-        assert!(
-            result.is_ok(),
-            "Admin must be able to suspend carrier"
-        );
+        assert!(result.is_ok(), "Admin must be able to suspend carrier");
     }
 }
 
@@ -396,10 +372,7 @@ fn fuzz_role_admin_cannot_self_revoke() {
 
         // Admin attempting to revoke their own role must fail
         let result = client.try_revoke_role(&admin, &admin);
-        assert!(
-            result.is_err(),
-            "Admin must not be able to self-revoke"
-        );
+        assert!(result.is_err(), "Admin must not be able to self-revoke");
 
         // Admin must still have privileges after failed self-revoke
         let target = Address::generate(&env);

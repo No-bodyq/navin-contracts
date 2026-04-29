@@ -131,15 +131,14 @@ mod tests {
         let hash = make_hash(&env, 3);
         let deadline = future_deadline(&env);
 
-        let id = client
-            .create_shipment(
-                &company,
-                &Address::generate(&env),
-                &carrier,
-                &hash,
-                &Vec::new(&env),
-                &deadline,
-            );
+        let id = client.create_shipment(
+            &company,
+            &Address::generate(&env),
+            &carrier,
+            &hash,
+            &Vec::new(&env),
+            &deadline,
+        );
 
         let hash2 = make_hash(&env, 4);
         // company is not the carrier — should be Unauthorized.
@@ -176,15 +175,14 @@ mod tests {
         let hash = make_hash(&env, 6);
         let deadline = future_deadline(&env);
 
-        let id = client
-            .create_shipment(
-                &company,
-                &Address::generate(&env),
-                &carrier,
-                &hash,
-                &Vec::new(&env),
-                &deadline,
-            );
+        let id = client.create_shipment(
+            &company,
+            &Address::generate(&env),
+            &carrier,
+            &hash,
+            &Vec::new(&env),
+            &deadline,
+        );
 
         client.suspend_carrier(&admin, &carrier);
 
@@ -211,15 +209,14 @@ mod tests {
         let hash = make_hash(&env, 8);
         let deadline = future_deadline(&env);
 
-        let id = client
-            .create_shipment(
-                &company,
-                &receiver,
-                &carrier,
-                &hash,
-                &Vec::new(&env),
-                &deadline,
-            );
+        let id = client.create_shipment(
+            &company,
+            &receiver,
+            &carrier,
+            &hash,
+            &Vec::new(&env),
+            &deadline,
+        );
 
         // Transition to Delivered (finalized when escrow == 0).
         let h2 = make_hash(&env, 9);

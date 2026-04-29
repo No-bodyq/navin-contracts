@@ -17,7 +17,9 @@ mod tests {
     #[contractimpl]
     impl MockToken {
         pub fn transfer(_env: Env, _from: Address, _to: Address, _amount: i128) {}
-        pub fn decimals(_env: Env) -> u32 { 7 }
+        pub fn decimals(_env: Env) -> u32 {
+            7
+        }
     }
 
     fn setup_multisig() -> (Env, NavinShipmentClient<'static>, Address, Address) {

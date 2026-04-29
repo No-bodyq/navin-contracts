@@ -148,23 +148,23 @@ impl Default for ContractConfig {
     /// ```
     fn default() -> Self {
         Self {
-            shipment_ttl_threshold: 17_280,   // ~1 day
-            shipment_ttl_extension: 518_400,  // ~30 days
-            min_status_update_interval: 60,   // 60 seconds
-            batch_operation_limit: 10,        // 10 items
-            max_metadata_entries: 5,          // 5 entries
-            default_shipment_limit: 100,      // 100 shipments
-            multisig_min_admins: 2,           // 2 admins
-            multisig_max_admins: 10,          // 10 admins
-            proposal_expiry_seconds: 604_800, // 7 days
-            deadline_grace_seconds: 0,        // no grace period
-            idempotency_window_seconds: 300,  // 5 minutes
-            auto_dispute_breach: false,       // disabled by default
-            max_milestones_per_shipment: 255, // 255 milestones
-            max_notes_per_shipment: 255,      // 255 notes
-            max_evidence_per_dispute: 255,    // 255 evidence entries
-            max_breaches_per_shipment: 255,   // 255 breaches
-            creation_quota_max: 0,            // disabled by default
+            shipment_ttl_threshold: 17_280,      // ~1 day
+            shipment_ttl_extension: 518_400,     // ~30 days
+            min_status_update_interval: 60,      // 60 seconds
+            batch_operation_limit: 10,           // 10 items
+            max_metadata_entries: 5,             // 5 entries
+            default_shipment_limit: 100,         // 100 shipments
+            multisig_min_admins: 2,              // 2 admins
+            multisig_max_admins: 10,             // 10 admins
+            proposal_expiry_seconds: 604_800,    // 7 days
+            deadline_grace_seconds: 0,           // no grace period
+            idempotency_window_seconds: 300,     // 5 minutes
+            auto_dispute_breach: false,          // disabled by default
+            max_milestones_per_shipment: 255,    // 255 milestones
+            max_notes_per_shipment: 255,         // 255 notes
+            max_evidence_per_dispute: 255,       // 255 evidence entries
+            max_breaches_per_shipment: 255,      // 255 breaches
+            creation_quota_max: 0,               // disabled by default
             creation_quota_window_seconds: 3600, // 1 hour window
         }
     }

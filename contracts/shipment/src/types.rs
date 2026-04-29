@@ -695,6 +695,26 @@ pub struct Analytics {
     pub cancelled_count: u64,
 }
 
+/// Compact summary of shipment counts aggregated by status.
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShipmentStatusSummary {
+    /// Count of shipments in 'Created' state.
+    pub created: u64,
+    /// Count of shipments in 'InTransit' state.
+    pub in_transit: u64,
+    /// Count of shipments in 'AtCheckpoint' state.
+    pub at_checkpoint: u64,
+    /// Count of shipments in 'PartiallyDelivered' state.
+    pub partially_delivered: u64,
+    /// Count of shipments in 'Delivered' state.
+    pub delivered: u64,
+    /// Count of shipments in 'Disputed' state.
+    pub disputed: u64,
+    /// Count of shipments in 'Cancelled' state.
+    pub cancelled: u64,
+}
+
 /// Paginated result for company-carrier relationship queries (issue #295).
 ///
 /// Returns a page of carrier addresses whitelisted by a company, with a

@@ -427,7 +427,10 @@ pub fn emit_milestone_payment_released(
         event_counter,
     );
     env.events().publish(
-        (Symbol::new(env, crate::event_topics::MILESTONE_PAYMENT_RELEASED),),
+        (Symbol::new(
+            env,
+            crate::event_topics::MILESTONE_PAYMENT_RELEASED,
+        ),),
         (
             shipment_id,
             milestone.clone(),
@@ -1434,12 +1437,7 @@ pub fn emit_escrow_frozen(
 }
 
 /// Emits a `platform_fee_collected` event when a fee is deducted from a deposit.
-pub fn emit_platform_fee_collected(
-    env: &Env,
-    shipment_id: u64,
-    treasury: &Address,
-    amount: i128,
-) {
+pub fn emit_platform_fee_collected(env: &Env, shipment_id: u64, treasury: &Address, amount: i128) {
     let event_counter = next_event_counter(env, shipment_id);
     let idempotency_key = generate_idempotency_key(
         env,
@@ -1449,7 +1447,10 @@ pub fn emit_platform_fee_collected(
         event_counter,
     );
     env.events().publish(
-        (Symbol::new(env, crate::event_topics::PLATFORM_FEE_COLLECTED),),
+        (Symbol::new(
+            env,
+            crate::event_topics::PLATFORM_FEE_COLLECTED,
+        ),),
         (
             shipment_id,
             treasury.clone(),
@@ -1463,14 +1464,14 @@ pub fn emit_platform_fee_collected(
 }
 
 /// Emits a `fee_config_updated` event when the platform fee configuration changes.
-pub fn emit_fee_config_updated(
-    env: &Env,
-    admin: &Address,
-    fee_bps: u32,
-    treasury: &Address,
-) {
+pub fn emit_fee_config_updated(env: &Env, admin: &Address, fee_bps: u32, treasury: &Address) {
     env.events().publish(
         (Symbol::new(env, crate::event_topics::FEE_CONFIG_UPDATED),),
-        (admin.clone(), fee_bps, treasury.clone(), EVENT_SCHEMA_VERSION),
+        (
+            admin.clone(),
+            fee_bps,
+            treasury.clone(),
+            EVENT_SCHEMA_VERSION,
+        ),
     );
 }

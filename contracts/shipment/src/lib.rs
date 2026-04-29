@@ -2189,6 +2189,8 @@ impl NavinShipment {
         let shipment =
             storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
         Ok(shipment.updated_at)
+    }
+
     /// * `Result<Address, NavinError>` - Address designated as shipment carrier at creation.
     ///
     /// # Errors
@@ -2337,12 +2339,24 @@ impl NavinShipment {
                     let mut net_amount = amount;
                     if let Some(fee_config) = storage::get_fee_config(&env) {
                         if fee_config.fee_bps > 0 {
-                            let fee_amount = checked_mul_div_i128(amount, fee_config.fee_bps as i128, 10000)?;
+                            let fee_amount =
+                                checked_mul_div_i128(amount, fee_config.fee_bps as i128, 10000)?;
                             if fee_amount > 0 {
                                 // Transfer fee from this contract to treasury
-                                invoke_token_transfer(&env, &token_contract, &contract_address, &fee_config.treasury, fee_amount)?;
+                                invoke_token_transfer(
+                                    &env,
+                                    &token_contract,
+                                    &contract_address,
+                                    &fee_config.treasury,
+                                    fee_amount,
+                                )?;
                                 net_amount = checked_sub_i128(amount, fee_amount)?;
-                                events::emit_platform_fee_collected(&env, shipment_id, &fee_config.treasury, fee_amount);
+                                events::emit_platform_fee_collected(
+                                    &env,
+                                    shipment_id,
+                                    &fee_config.treasury,
+                                    fee_amount,
+                                );
                             }
                         }
                     }
@@ -3382,7 +3396,9 @@ impl NavinShipment {
             let release_amount =
                 checked_mul_div_i128(mut_shipment.total_escrow, milestone.1 as i128, 100)?;
 
-            mut_shipment.milestones_completed.push_back(checkpoint.clone());
+            mut_shipment
+                .milestones_completed
+                .push_back(checkpoint.clone());
             if !mut_shipment.paid_milestones.iter().any(|m| m == checkpoint) {
                 mut_shipment.paid_milestones.push_back(checkpoint.clone());
             }
@@ -3537,7 +3553,9 @@ impl NavinShipment {
                         100,
                     )?;
 
-                    mut_shipment.milestones_completed.push_back(checkpoint.clone());
+                    mut_shipment
+                        .milestones_completed
+                        .push_back(checkpoint.clone());
                     if !mut_shipment.paid_milestones.iter().any(|m| m == checkpoint) {
                         mut_shipment.paid_milestones.push_back(checkpoint.clone());
                     }
@@ -3578,7 +3596,8 @@ impl NavinShipment {
         require_not_paused(&env)?;
         caller.require_auth();
 
-        let mut shipment = storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
+        let mut shipment =
+            storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
         require_not_finalized(&shipment)?;
 
         let admin = storage::get_admin(&env);
@@ -3618,7 +3637,9 @@ impl NavinShipment {
         let release_amount = checked_mul_div_i128(shipment.total_escrow, ms_config.1 as i128, 100)?;
 
         if release_amount > 0 {
-            shipment.milestones_completed.push_back(milestone_name.clone());
+            shipment
+                .milestones_completed
+                .push_back(milestone_name.clone());
             // Keep paid_milestones in sync for backward compatibility
             let mut in_paid = false;
             for ms in shipment.paid_milestones.iter() {

@@ -158,6 +158,7 @@ fn test_deposit_escrow_settlement_success() {
         &data_hash,
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let escrow_amount: i128 = 1000;
@@ -209,6 +210,7 @@ fn test_deposit_escrow_settlement_failure() {
         &data_hash,
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let escrow_amount: i128 = 1000;
@@ -251,6 +253,7 @@ fn test_release_escrow_settlement_success() {
         &data_hash,
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let escrow_amount: i128 = 5000;
@@ -309,6 +312,7 @@ fn test_refund_escrow_settlement_success() {
         &data_hash,
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let escrow_amount: i128 = 3000;
@@ -361,6 +365,7 @@ fn test_refund_escrow_settlement_failure() {
         &data_hash,
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Manually set escrow to bypass the failing transfer during deposit
@@ -413,6 +418,7 @@ fn test_settlement_full_lifecycle() {
         &data_hash,
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Step 1: Deposit escrow
@@ -463,6 +469,7 @@ fn test_settlement_record_metadata() {
         &data_hash,
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let before_timestamp = env.ledger().timestamp();
@@ -507,6 +514,7 @@ fn test_multiple_shipments_independent_settlements() {
         &data_hash1,
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let shipment_id2 = client.create_shipment(
@@ -517,6 +525,7 @@ fn test_multiple_shipments_independent_settlements() {
         &seeded_hash(&env, 2),
         &soroban_sdk::Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Deposit escrow for both

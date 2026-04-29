@@ -246,7 +246,8 @@ fn fuzz_role_suspended_company_blocked() {
             &data_hash,
             &Vec::new(&env),
             &deadline,
-        );
+        &None,
+    );
         assert!(
             result.is_err(),
             "Suspended company must not create shipment"
@@ -289,7 +290,8 @@ fn fuzz_role_reactivated_carrier_regains_access() {
             &data_hash,
             &Vec::new(&env),
             &deadline,
-        );
+        &None,
+    );
         assert!(
             result.is_ok(),
             "Reactivated carrier must be usable in shipments"
@@ -354,7 +356,8 @@ fn fuzz_role_random_address_combinations() {
             &data_hash,
             &Vec::new(&env),
             &deadline,
-        );
+        &None,
+    );
         assert!(
             result.is_err(),
             "Address with no role must not create shipment"
@@ -371,6 +374,7 @@ fn fuzz_role_random_address_combinations() {
                 &data_hash2,
                 &Vec::new(&env),
                 &deadline2,
+                &None,
             );
             assert!(
                 result2.is_ok(),

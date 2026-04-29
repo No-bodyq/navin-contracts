@@ -1835,6 +1835,54 @@ pub fn get_proposal_digest(env: &Env, proposal_id: u64) -> Option<crate::types::
         .get(&DataKey::ProposalDigest(proposal_id))
 }
 
+
+// ============= Shipment Dependency Storage Functions =============
+
+/// Store prerequisites for a shipment.
+pub fn set_dependencies(env: &Env, shipment_id: u64, dependencies: &soroban_sdk::Vec<u64>) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::ShipmentDeps(shipment_id), dependencies);
+    env.storage()
+        .persistent()
+        .extend_ttl(
+            &DataKey::ShipmentDeps(shipment_id),
+            env.storage().max_ttl() - 100,
+            env.storage().max_ttl(),
+        );
+}
+
+/// Retrieve prerequisites for a shipment.
+pub fn get_dependencies(env: &Env, shipment_id: u64) -> Option<soroban_sdk::Vec<u64>> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::ShipmentDeps(shipment_id))
+}
+
+/// Store shipments that depend on a specific shipment.
+pub fn add_dependent(env: &Env, prerequisite_id: u64, dependent_shipment_id: u64) {
+    let mut dependents = get_dependents(env, prerequisite_id)
+        .unwrap_or_else(|| soroban_sdk::Vec::new(env));
+    dependents.push_back(dependent_shipment_id);
+    env.storage()
+        .persistent()
+        .set(&DataKey::ShipmentDependents(prerequisite_id), &dependents);
+    env.storage()
+        .persistent()
+        .extend_ttl(
+            &DataKey::ShipmentDependents(prerequisite_id),
+            env.storage().max_ttl() - 100,
+            env.storage().max_ttl(),
+        );
+}
+
+/// Retrieve shipments depending on a shipment.
+pub fn get_dependents(env: &Env, shipment_id: u64) -> Option<soroban_sdk::Vec<u64>> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::ShipmentDependents(shipment_id))
+}
+
 #[cfg(test)]
 #[allow(clippy::items_after_test_module)]
 mod tests {

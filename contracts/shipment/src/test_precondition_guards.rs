@@ -83,7 +83,8 @@ mod tests {
             &hash,
             &Vec::new(&env),
             &deadline,
-        );
+        &None,
+    );
         assert_eq!(result, Err(Ok(NavinError::ContractPaused)));
     }
 
@@ -119,7 +120,8 @@ mod tests {
             &hash,
             &Vec::new(&env),
             &deadline,
-        );
+        &None,
+    );
         assert_eq!(result, Err(Ok(NavinError::Unauthorized)));
     }
 
@@ -139,7 +141,8 @@ mod tests {
                 &hash,
                 &Vec::new(&env),
                 &deadline,
-            );
+        &None,
+    );
 
         let hash2 = make_hash(&env, 4);
         // company is not the carrier — should be Unauthorized.
@@ -164,7 +167,8 @@ mod tests {
             &hash,
             &Vec::new(&env),
             &deadline,
-        );
+        &None,
+    );
         assert_eq!(result, Err(Ok(NavinError::CompanySuspended)));
     }
 
@@ -184,7 +188,8 @@ mod tests {
                 &hash,
                 &Vec::new(&env),
                 &deadline,
-            );
+        &None,
+    );
 
         client.suspend_carrier(&admin, &carrier);
 
@@ -219,7 +224,8 @@ mod tests {
                 &hash,
                 &Vec::new(&env),
                 &deadline,
-            );
+        &None,
+    );
 
         // Transition to Delivered (finalized when escrow == 0).
         let h2 = make_hash(&env, 9);

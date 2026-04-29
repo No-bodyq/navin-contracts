@@ -41,6 +41,7 @@ fn test_finalization_on_delivery_settlement() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Initial state: not finalized
@@ -85,6 +86,7 @@ fn test_finalization_on_cancel_with_zero_escrow() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Initial state: not finalized
@@ -120,6 +122,7 @@ fn test_mutation_rejected_after_finalization() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Finalize it
@@ -155,6 +158,7 @@ fn test_archival_permitted_after_finalization() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Finalize it

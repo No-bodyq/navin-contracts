@@ -142,6 +142,7 @@ fn test_create_shipment_invalid_hash_all_zeros() {
         &invalid_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     assert!(result.is_err(), "create_shipment must reject all-zero hash");
 }
@@ -164,6 +165,7 @@ fn test_create_shipment_deadline_in_past() {
         &data_hash,
         &Vec::new(&env),
         &past_deadline,
+        &None,
     );
     assert!(result.is_err(), "create_shipment must reject past deadline");
 }
@@ -184,6 +186,7 @@ fn test_create_shipment_unauthorized_company() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     assert!(result.is_err(), "create_shipment must fail for non-company");
 }
@@ -211,6 +214,7 @@ fn test_create_shipment_invalid_milestone_sum() {
         &data_hash,
         &milestones,
         &deadline,
+        &None,
     );
     assert!(
         result.is_err(),
@@ -239,6 +243,7 @@ fn test_deposit_escrow_invalid_amount_zero() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let result = client.try_deposit_escrow(&company, &shipment_id, &0i128);
@@ -299,6 +304,7 @@ fn test_update_status_invalid_transition() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Try invalid transition: Created -> Delivered (should be Created -> InTransit)
@@ -353,6 +359,7 @@ fn test_cancel_shipment_unauthorized_caller() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let unauthorized = Address::generate(&env);
@@ -398,6 +405,7 @@ fn test_release_escrow_invalid_status() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     // Try to release escrow when shipment is in Created status (not Delivered)
@@ -461,6 +469,7 @@ fn test_raise_dispute_unauthorized_caller() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let unauthorized = Address::generate(&env);
@@ -512,6 +521,7 @@ fn test_resolve_dispute_unauthorized_caller() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let unauthorized = Address::generate(&env);
@@ -605,6 +615,7 @@ fn test_force_cancel_shipment_unauthorized_caller() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let unauthorized = Address::generate(&env);

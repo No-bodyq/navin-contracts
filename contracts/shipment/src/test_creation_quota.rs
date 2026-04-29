@@ -63,6 +63,7 @@ mod tests {
             &hash,
             &Vec::new(env),
             &deadline,
+            &None,
         ) {
             Ok(Ok(id)) => Ok(id),
             Err(Ok(e)) => Err(e),
@@ -220,7 +221,8 @@ mod tests {
                 data_hash: make_hash(&env, seed),
                 payment_milestones: soroban_sdk::Vec::new(&env),
                 deadline,
-            });
+            depends_on: None,
+        });
         }
 
         // Batch of 3 exceeds quota of 2.

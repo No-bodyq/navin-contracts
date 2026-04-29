@@ -396,6 +396,7 @@ mod tests {
             deadline: 200,
             integration_nonce: 0,
             finalized: false,
+            depends_on: None,
         };
 
         assert_eq!(validate_shipment_invariants(&shipment), Ok(()));
@@ -421,6 +422,7 @@ mod tests {
             deadline: 200,
             integration_nonce: 0,
             finalized: false,
+            depends_on: None,
         };
 
         assert_eq!(
@@ -856,4 +858,90 @@ mod symbol_validation_tests {
             "Duplicate milestone should return InvalidShipmentInput"
         );
     }
+}
+
+/// Maximum number of dependencies allowed per shipment.
+const MAX_DEPENDENCIES: usize = 10;
+
+/// Maximum recursion depth for cycle detection.
+const MAX_DEPTH: usize = 64;
+
+/// Validate shipment dependencies before persistence.
+///
+/// Ensures:
+/// - Dependency count does not exceed MAX_DEPENDENCIES (10)
+/// - All referenced shipment IDs exist
+/// - No circular dependencies are present
+pub fn validate_dependencies(
+    env: &Env,
+    shipment_id: u64,
+    dependencies: &Option<soroban_sdk::Vec<u64>>,
+) -> Result<(), NavinError> {
+    let deps = match dependencies {
+        Some(d) => d,
+        None => return Ok(()),
+    };
+
+    if deps.len() as usize > MAX_DEPENDENCIES {
+        return Err(NavinError::InvalidShipmentInput);
+    }
+
+    for i in 0..deps.len() {
+        let dep_id = deps.get_unchecked(i);
+        if dep_id == shipment_id {
+            return Err(NavinError::CircularDependency);
+        }
+        let _ = storage::get_shipment(env, dep_id)
+            .ok_or(NavinError::ShipmentNotFound)?;
+        if transitive_has_dependency(env, dep_id, shipment_id, 0)? {
+            return Err(NavinError::CircularDependency);
+        }
+    }
+
+    Ok(())
+}
+
+fn transitive_has_dependency(
+    env: &Env,
+    target: u64,
+    shipment_id: u64,
+    depth: usize,
+) -> Result<bool, NavinError> {
+    if depth > MAX_DEPTH {
+        return Err(NavinError::CircularDependency);
+    }
+
+    if let Some(target_deps) = storage::get_dependencies(env, target) {
+        for i in 0..target_deps.len() {
+            let dep = target_deps.get_unchecked(i);
+            if dep == shipment_id {
+                return Ok(true);
+            }
+            if transitive_has_dependency(env, dep, shipment_id, depth + 1)? {
+                return Ok(true);
+            }
+        }
+    }
+    Ok(false)
+}
+
+pub fn collect_unmet_dependencies(
+    env: &Env,
+    shipment_id: u64,
+) -> Result<soroban_sdk::Vec<u64>, NavinError> {
+    let mut unmet = soroban_sdk::Vec::new(env);
+
+    if let Some(deps) = storage::get_dependencies(env, shipment_id) {
+        for i in 0..deps.len() {
+            let dep_id = deps.get_unchecked(i);
+            match storage::get_shipment(env, dep_id) {
+                Some(shipment) if shipment.status == ShipmentStatus::Delivered => {}
+                _ => {
+                    unmet.push_back(dep_id);
+                }
+            }
+        }
+    }
+
+    Ok(unmet)
 }

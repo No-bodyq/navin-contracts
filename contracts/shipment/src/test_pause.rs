@@ -86,7 +86,7 @@ mod tests {
         let milestones = Vec::new(&env);
         let deadline = future_deadline(&env, 86400);
 
-        client.create_shipment(&company, &receiver, &carrier, &hash, &milestones, &deadline);
+        client.create_shipment(&company, &receiver, &carrier, &hash, &milestones, &deadline, &None);
     }
 
     #[test]
@@ -107,7 +107,7 @@ mod tests {
         let deadline = future_deadline(&env, 86400);
 
         let shipment_id =
-            client.create_shipment(&company, &receiver, &carrier, &hash, &milestones, &deadline);
+            client.create_shipment(&company, &receiver, &carrier, &hash, &milestones, &deadline, &None);
 
         // Pause the contract
         client.pause(&admin);
@@ -139,7 +139,7 @@ mod tests {
         let deadline = future_deadline(&env, 86400);
 
         let shipment_id =
-            client.create_shipment(&company, &receiver, &carrier, &hash, &milestones, &deadline);
+            client.create_shipment(&company, &receiver, &carrier, &hash, &milestones, &deadline, &None);
 
         // Pause the contract
         client.pause(&admin);
@@ -178,7 +178,8 @@ mod tests {
             &hash1,
             &milestones,
             &deadline,
-        );
+        &None,
+    );
 
         // Pause
         client.pause(&admin);
@@ -197,7 +198,8 @@ mod tests {
             &hash2,
             &milestones,
             &deadline,
-        );
+        &None,
+    );
 
         assert_eq!(shipment_id2, shipment_id1 + 1);
     }

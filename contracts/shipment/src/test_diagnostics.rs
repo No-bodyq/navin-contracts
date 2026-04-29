@@ -53,6 +53,7 @@ fn test_clean_health_check() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let health = client.check_contract_health(&admin);
@@ -84,6 +85,7 @@ fn test_detect_anomalies_and_escrow() {
         &data_hash1,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     advance_ledger_time(&env, 1);
     let id2 = client.create_shipment(
@@ -93,6 +95,7 @@ fn test_detect_anomalies_and_escrow() {
         &data_hash2,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     client.deposit_escrow(&company, &id1, &1500);
@@ -143,6 +146,7 @@ fn test_detect_storage_inconsistencies() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let cid = client.address.clone();

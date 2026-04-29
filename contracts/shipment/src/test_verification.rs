@@ -29,6 +29,7 @@ fn test_frontend_verification_flow() {
         &data_hash,
         &payment_milestones,
         &deadline,
+        &None,
     );
 
     // 1. Get events

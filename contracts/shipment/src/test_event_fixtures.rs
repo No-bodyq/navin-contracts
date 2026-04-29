@@ -116,6 +116,7 @@ fn test_snapshot_shipment_created_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     let payload = find_event_data(&env, crate::event_topics::SHIPMENT_CREATED)
@@ -148,6 +149,7 @@ fn test_snapshot_status_updated_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     client.update_status(
@@ -187,6 +189,7 @@ fn test_snapshot_escrow_deposited_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     client.deposit_escrow(&company, &id, &1_000i128);
@@ -221,6 +224,7 @@ fn test_snapshot_escrow_released_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     client.deposit_escrow(&company, &id, &1_000i128);
     client.update_status(
@@ -261,6 +265,7 @@ fn test_snapshot_escrow_refunded_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     client.deposit_escrow(&company, &id, &1_000i128);
     client.refund_escrow(&company, &id);
@@ -294,6 +299,7 @@ fn test_snapshot_dispute_raised_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     client.raise_dispute(&company, &id, &data_hash);
 
@@ -328,6 +334,7 @@ fn test_snapshot_dispute_resolved_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     client.deposit_escrow(&company, &id, &1_000i128);
     client.raise_dispute(&company, &id, &data_hash);
@@ -367,6 +374,7 @@ fn test_snapshot_escrow_frozen_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     client.raise_dispute(&company, &id, &data_hash);
 
@@ -400,6 +408,7 @@ fn test_snapshot_milestone_recorded_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     client.update_status(
         &carrier,
@@ -444,6 +453,7 @@ fn test_snapshot_shipment_cancelled_payload_shape() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     client.cancel_shipment(&company, &id, &BytesN::from_array(&env, &[17u8; 32]));
 
@@ -473,6 +483,7 @@ fn test_all_fixtures_emit_expected_topics() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
     let mut found = topics_emitted(&env);
 
@@ -508,6 +519,7 @@ fn test_fixture_payload_shapes_are_stable() {
         &data_hash,
         &Vec::new(&env),
         &deadline,
+        &None,
     );
 
     client.raise_dispute(&company, &shipment_id, &data_hash);

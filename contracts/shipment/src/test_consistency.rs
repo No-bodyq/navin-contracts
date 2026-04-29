@@ -55,6 +55,7 @@ fn create_one(
         &dummy_hash(env, seed),
         &Vec::new(env),
         &deadline,
+        &None,
     )
 }
 
@@ -98,6 +99,7 @@ fn test_healthy_batch_has_no_violations() {
             data_hash: dummy_hash(&env, seed),
             payment_milestones: Vec::new(&env),
             deadline,
+            depends_on: None,
         });
     }
     let ids = client.create_shipments_batch(&company, &inputs);

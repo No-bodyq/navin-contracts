@@ -121,4 +121,8 @@ pub enum NavinError {
     InvalidTokenDecimals = 52,
     /// Company has exceeded the shipment creation quota for the current time window.
     CreationQuotaExceeded = 53,
+    /// Shipment cannot transition to a delivery state because its prerequisite shipments are not yet completed.
+    DependenciesNotMet = 54,
+    /// A circular dependency was detected in the shipment prerequisites.
+    CircularDependency = 55,
 }

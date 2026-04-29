@@ -142,7 +142,8 @@ fn fuzz_milestone_sum_must_be_100() {
             &data_hash,
             &bad_milestones,
             &deadline,
-        );
+        &None,
+    );
         assert!(
             result.is_err(),
             "Milestones summing to {} (not 100) must be rejected",
@@ -185,7 +186,8 @@ fn fuzz_milestone_valid_sum_accepted() {
             &data_hash,
             &milestones,
             &deadline,
-        );
+        &None,
+    );
         assert!(
             result.is_ok(),
             "Valid milestones summing to 100 (count={count}) must be accepted"
@@ -228,7 +230,8 @@ fn fuzz_milestone_partial_releases_never_exceed_escrow() {
             &data_hash,
             &milestones,
             &deadline,
-        );
+        &None,
+    );
 
         let deposit_amount = ((seed % 999_999) + 1) as i128;
         client.deposit_escrow(&company, &id, &deposit_amount);
@@ -314,7 +317,8 @@ fn fuzz_milestone_idempotency_single_payment() {
             &data_hash,
             &milestones,
             &deadline,
-        );
+        &None,
+    );
 
         let amount = ((seed % 999_999) + 1) as i128;
         client.deposit_escrow(&company, &id, &amount);
@@ -387,7 +391,8 @@ fn fuzz_milestone_random_valid_percentages() {
             &data_hash,
             &milestones,
             &deadline,
-        );
+        &None,
+    );
         assert!(
             result.is_ok(),
             "Random valid milestones ({p1}+{p2}=100) must be accepted"

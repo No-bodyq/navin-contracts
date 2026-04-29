@@ -1822,7 +1822,7 @@ impl NavinShipment {
     ///
     /// let shipment_id = client.create_shipment(
     ///     &sender, &receiver, &carrier, &data_hash, &milestones, &deadline,
-    /// );
+    /// , &None);
     /// assert_eq!(shipment_id, 1);
     /// ```
     pub fn create_shipment(
@@ -1833,6 +1833,7 @@ impl NavinShipment {
         data_hash: BytesN<32>,
         payment_milestones: Vec<(Symbol, u32)>,
         deadline: u64,
+        depends_on: Option<Vec<u64>>,
     ) -> Result<u64, NavinError> {
         require_initialized(&env)?;
         require_not_paused(&env)?;
@@ -1866,6 +1867,8 @@ impl NavinShipment {
             .checked_add(1)
             .ok_or(NavinError::CounterOverflow)?;
 
+        validation::validate_dependencies(&env, shipment_id, &depends_on)?;
+
         let shipment = Shipment {
             id: shipment_id,
             sender: sender.clone(),
@@ -1883,9 +1886,16 @@ impl NavinShipment {
             deadline,
             integration_nonce: 0,
             finalized: false,
+            depends_on: depends_on.clone(),
         };
 
         persist_shipment(&env, &shipment)?;
+        if let Some(dependencies) = depends_on {
+            storage::set_dependencies(&env, shipment_id, &dependencies);
+            for dep_id in dependencies.iter() {
+                storage::add_dependent(&env, dep_id, shipment_id);
+            }
+        }
         storage::set_shipment_counter(&env, shipment_id);
         storage::increment_status_count(&env, &ShipmentStatus::Created);
         storage::increment_active_shipment_count(&env, &sender);
@@ -2004,6 +2014,12 @@ impl NavinShipment {
                 .checked_add(1)
                 .ok_or(NavinError::CounterOverflow)?;
 
+            validation::validate_dependencies(
+                &env,
+                shipment_id,
+                &shipment_input.depends_on,
+            )?;
+
             let shipment = Shipment {
                 id: shipment_id,
                 sender: sender.clone(),
@@ -2021,6 +2037,7 @@ impl NavinShipment {
                 deadline: shipment_input.deadline,
                 integration_nonce: 0,
                 finalized: false,
+                depends_on: shipment_input.depends_on.clone(),
             };
 
             persist_shipment(&env, &shipment)?;
@@ -2235,7 +2252,7 @@ impl NavinShipment {
     /// # let deadline = env.ledger().timestamp() + 86_400;
     /// # let receiver = Address::generate(&env);
     /// # let carrier = Address::generate(&env);
-    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline);
+    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline, &None);
     /// // Deposit 5_000_000 stroops (0.5 tokens) into escrow for the shipment.
     /// // The company must have pre-approved the token transfer allowance.
     /// client.deposit_escrow(&admin, &shipment_id, &5_000_000_i128);
@@ -2357,7 +2374,7 @@ impl NavinShipment {
     /// # let milestones: Vec<(Symbol, u32)> = Vec::new(&env);
     /// # let deadline = env.ledger().timestamp() + 86_400;
     /// # let receiver = Address::generate(&env);
-    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline);
+    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline, &None);
     /// let transit_hash = BytesN::from_array(&env, &[2u8; 32]);
     ///
     /// // Carrier moves shipment from Created -> InTransit.
@@ -2412,6 +2429,14 @@ impl NavinShipment {
 
         if !shipment.status.is_valid_transition(&new_status) {
             return Err(NavinError::InvalidStatus);
+        }
+
+        if matches!(new_status, ShipmentStatus::InTransit | ShipmentStatus::Delivered) {
+            let unmet = validation::collect_unmet_dependencies(&env, shipment_id)?;
+            if !unmet.is_empty() {
+                events::emit_shipment_blocked(&env, shipment_id, &caller, unmet);
+                return Err(NavinError::DependenciesNotMet);
+            }
         }
 
         let old_status = shipment.status.clone();
@@ -2480,6 +2505,24 @@ impl NavinShipment {
             return Err(NavinError::ShipmentNotFound);
         }
         Ok(storage::get_escrow_balance(&env, shipment_id))
+    }
+
+    /// Return the dependency list for a shipment.
+    pub fn get_dependencies(env: Env, shipment_id: u64) -> Result<Vec<u64>, NavinError> {
+        require_initialized(&env)?;
+        if storage::get_shipment(&env, shipment_id).is_none() {
+            return Err(NavinError::ShipmentNotFound);
+        }
+        Ok(storage::get_dependencies(&env, shipment_id).unwrap_or_else(|| Vec::new(&env)))
+    }
+
+    /// Return shipments that are blocked on a prerequisite shipment.
+    pub fn get_blocked_shipments(env: Env, shipment_id: u64) -> Result<Vec<u64>, NavinError> {
+        require_initialized(&env)?;
+        if storage::get_shipment(&env, shipment_id).is_none() {
+            return Err(NavinError::ShipmentNotFound);
+        }
+        Ok(storage::get_dependents(&env, shipment_id).unwrap_or_else(|| Vec::new(&env)))
     }
 
     /// Get the latest structured escrow freeze reason for a shipment, if present.
@@ -2903,7 +2946,7 @@ impl NavinShipment {
     /// # let data_hash = BytesN::from_array(&env, &[1u8; 32]);
     /// # let milestones: Vec<(Symbol, u32)> = Vec::new(&env);
     /// # let deadline = env.ledger().timestamp() + 86_400;
-    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline);
+    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline, &None);
     /// # client.update_status(&carrier, &shipment_id, &ShipmentStatus::InTransit, &BytesN::from_array(&env, &[2u8; 32]));
     /// let pod_hash = BytesN::from_array(&env, &[3u8; 32]); // SHA-256 of proof-of-delivery doc
     ///
@@ -3831,7 +3874,7 @@ impl NavinShipment {
     /// # let data_hash = BytesN::from_array(&env, &[1u8; 32]);
     /// # let milestones: Vec<(Symbol, u32)> = Vec::new(&env);
     /// # let deadline = env.ledger().timestamp() + 86_400;
-    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline);
+    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline, &None);
     /// # client.update_status(&carrier, &shipment_id, &ShipmentStatus::InTransit, &BytesN::from_array(&env, &[2u8; 32]));
     /// # client.confirm_delivery(&receiver, &shipment_id, &BytesN::from_array(&env, &[3u8; 32]));
     /// // Manually release any remaining escrow to the carrier after delivery is confirmed.
@@ -3922,7 +3965,7 @@ impl NavinShipment {
     /// # let data_hash = BytesN::from_array(&env, &[1u8; 32]);
     /// # let milestones: Vec<(Symbol, u32)> = Vec::new(&env);
     /// # let deadline = env.ledger().timestamp() + 86_400;
-    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline);
+    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline, &None);
     /// // Refund escrow back to the company when the shipment is in Created or Cancelled state.
     /// client.refund_escrow(&admin, &shipment_id);
     /// ```
@@ -4036,7 +4079,7 @@ impl NavinShipment {
     /// # let data_hash = BytesN::from_array(&env, &[1u8; 32]);
     /// # let milestones: Vec<(Symbol, u32)> = Vec::new(&env);
     /// # let deadline = env.ledger().timestamp() + 86_400;
-    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline);
+    /// # let shipment_id = client.create_shipment(&admin, &receiver, &carrier, &data_hash, &milestones, &deadline, &None);
     /// # client.update_status(&carrier, &shipment_id, &ShipmentStatus::InTransit, &BytesN::from_array(&env, &[2u8; 32]));
     /// let reason_hash = BytesN::from_array(&env, &[4u8; 32]); // SHA-256 of dispute reason doc
     ///

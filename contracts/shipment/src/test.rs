@@ -6326,6 +6326,7 @@ fn test_get_non_terminal_count_mixed_states() {
             &BytesN::from_array(&env, &[i as u8; 32]),
             &soroban_sdk::Vec::new(&env),
             &deadline,
+            &None,
         );
     }
 

@@ -1472,7 +1472,7 @@
                 },
                 "durability": "persistent",
                 "val": {
-                  "u32": 5
+                  "u32": 6
                 }
               }
             },
@@ -2040,6 +2040,18 @@
                         "symbol": "metadata"
                       },
                       "val": "void"
+                    },
+                    {
+                      "key": {
+                        "symbol": "milestones_completed"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "M1"
+                          }
+                        ]
+                      }
                     },
                     {
                       "key": {
@@ -2852,7 +2864,7 @@
                 },
                 "durability": "persistent",
                 "val": {
-                  "u32": 5
+                  "u32": 6
                 }
               }
             },
@@ -3420,6 +3432,18 @@
                         "symbol": "metadata"
                       },
                       "val": "void"
+                    },
+                    {
+                      "key": {
+                        "symbol": "milestones_completed"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "M1"
+                          }
+                        ]
+                      }
                     },
                     {
                       "key": {

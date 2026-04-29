@@ -535,7 +535,7 @@
                 },
                 "durability": "persistent",
                 "val": {
-                  "u32": 7
+                  "u32": 8
                 }
               }
             },
@@ -1238,6 +1238,18 @@
                         "symbol": "metadata"
                       },
                       "val": "void"
+                    },
+                    {
+                      "key": {
+                        "symbol": "milestones_completed"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "checkpoint1"
+                          }
+                        ]
+                      }
                     },
                     {
                       "key": {

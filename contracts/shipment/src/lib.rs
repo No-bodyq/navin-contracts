@@ -1903,6 +1903,7 @@ impl NavinShipment {
             total_escrow: 0,
             payment_milestones,
             paid_milestones: Vec::new(&env),
+            milestones_completed: Vec::new(&env),
             metadata: None,
             deadline,
             integration_nonce: 0,
@@ -2040,6 +2041,7 @@ impl NavinShipment {
                 total_escrow: 0,
                 payment_milestones: shipment_input.payment_milestones,
                 paid_milestones: Vec::new(&env),
+                milestones_completed: Vec::new(&env),
                 metadata: None,
                 deadline: shipment_input.deadline,
                 integration_nonce: 0,
@@ -2145,6 +2147,7 @@ impl NavinShipment {
         Ok(shipment.receiver)
     }
 
+    /// Retrieve the creation timestamp for a shipment.
     /// Retrieve the immutable sender (creator) identity for a shipment.
     ///
     /// # Arguments
@@ -2152,6 +2155,15 @@ impl NavinShipment {
     /// * `shipment_id` - ID of the shipment.
     ///
     /// # Returns
+    /// * `Result<u64, NavinError>` - Ledger timestamp of creation.
+    pub fn get_shipment_created_at(env: Env, shipment_id: u64) -> Result<u64, NavinError> {
+        require_initialized(&env)?;
+        let shipment =
+            storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
+        Ok(shipment.created_at)
+    }
+
+    /// Retrieve the last update timestamp for a shipment.
     /// * `Result<Address, NavinError>` - Address that originally created the shipment.
     ///
     /// # Errors
@@ -2171,6 +2183,12 @@ impl NavinShipment {
     /// * `shipment_id` - ID of the shipment.
     ///
     /// # Returns
+    /// * `Result<u64, NavinError>` - Ledger timestamp of the last update.
+    pub fn get_shipment_updated_at(env: Env, shipment_id: u64) -> Result<u64, NavinError> {
+        require_initialized(&env)?;
+        let shipment =
+            storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
+        Ok(shipment.updated_at)
     /// * `Result<Address, NavinError>` - Address designated as shipment carrier at creation.
     ///
     /// # Errors
@@ -2274,7 +2292,7 @@ impl NavinShipment {
         require_role(&env, &from, Role::Company)?;
 
         with_reentrancy_lock(&env, || {
-            validate_amount(amount).map_err(|_| NavinError::InsufficientFunds)?;
+            validation::validate_positive_amount(amount)?;
 
             let mut shipment =
                 storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
@@ -2316,16 +2334,29 @@ impl NavinShipment {
                 Ok(()) => {
                     complete_settlement(&env, settlement_id, shipment_id)?;
 
-                    shipment.escrow_amount = checked_add_i128(0, amount)?;
-                    shipment.total_escrow = checked_add_i128(0, amount)?;
+                    let mut net_amount = amount;
+                    if let Some(fee_config) = storage::get_fee_config(&env) {
+                        if fee_config.fee_bps > 0 {
+                            let fee_amount = checked_mul_div_i128(amount, fee_config.fee_bps as i128, 10000)?;
+                            if fee_amount > 0 {
+                                // Transfer fee from this contract to treasury
+                                invoke_token_transfer(&env, &token_contract, &contract_address, &fee_config.treasury, fee_amount)?;
+                                net_amount = checked_sub_i128(amount, fee_amount)?;
+                                events::emit_platform_fee_collected(&env, shipment_id, &fee_config.treasury, fee_amount);
+                            }
+                        }
+                    }
+
+                    shipment.escrow_amount = net_amount;
+                    shipment.total_escrow = net_amount;
                     shipment.updated_at = env.ledger().timestamp();
                     shipment.integration_nonce = shipment.integration_nonce.saturating_add(1);
                     persist_shipment(&env, &shipment)?;
-                    storage::set_escrow(&env, shipment_id, amount);
+                    storage::set_escrow(&env, shipment_id, net_amount);
                     storage::add_total_escrow_volume(&env, amount)?;
                     extend_shipment_ttl(&env, shipment_id);
 
-                    events::emit_escrow_deposited(&env, shipment_id, &from, amount);
+                    events::emit_escrow_deposited(&env, shipment_id, &from, net_amount);
                 }
                 Err(e) => {
                     fail_settlement(&env, settlement_id, shipment_id, e as u32)?;
@@ -3350,7 +3381,19 @@ impl NavinShipment {
             let milestone = mut_shipment.payment_milestones.get(idx as u32).unwrap();
             let release_amount =
                 checked_mul_div_i128(mut_shipment.total_escrow, milestone.1 as i128, 100)?;
-            mut_shipment.paid_milestones.push_back(checkpoint.clone());
+
+            mut_shipment.milestones_completed.push_back(checkpoint.clone());
+            if !mut_shipment.paid_milestones.iter().any(|m| m == checkpoint) {
+                mut_shipment.paid_milestones.push_back(checkpoint.clone());
+            }
+
+            events::emit_milestone_payment_released(
+                &env,
+                shipment_id,
+                &checkpoint,
+                release_amount,
+                &mut_shipment.carrier,
+            );
             internal_release_escrow(&env, &mut mut_shipment, release_amount)?;
         }
 
@@ -3493,7 +3536,19 @@ impl NavinShipment {
                         payment_milestone.1 as i128,
                         100,
                     )?;
-                    mut_shipment.paid_milestones.push_back(checkpoint.clone());
+
+                    mut_shipment.milestones_completed.push_back(checkpoint.clone());
+                    if !mut_shipment.paid_milestones.iter().any(|m| m == checkpoint) {
+                        mut_shipment.paid_milestones.push_back(checkpoint.clone());
+                    }
+
+                    events::emit_milestone_payment_released(
+                        &env,
+                        shipment_id,
+                        &checkpoint,
+                        release_amount,
+                        &mut_shipment.carrier,
+                    );
                     internal_release_escrow(&env, &mut mut_shipment, release_amount)?;
                 }
             }
@@ -3501,6 +3556,93 @@ impl NavinShipment {
 
         finalize_if_settled(&env, &mut mut_shipment);
         storage::set_shipment(&env, &mut_shipment);
+
+        Ok(())
+    }
+
+    /// Explicitly release a partial escrow payment for a specific milestone.
+    /// Only Carrier or Admin can call this.
+    ///
+    /// # Arguments
+    /// * `env` - Execution environment.
+    /// * `caller` - Identity triggering the release (Carrier or Admin).
+    /// * `shipment_id` - ID of the target shipment.
+    /// * `milestone_name` - symbolic name of the milestone to pay.
+    pub fn release_milestone_payment(
+        env: Env,
+        caller: Address,
+        shipment_id: u64,
+        milestone_name: Symbol,
+    ) -> Result<(), NavinError> {
+        require_initialized(&env)?;
+        require_not_paused(&env)?;
+        caller.require_auth();
+
+        let mut shipment = storage::get_shipment(&env, shipment_id).ok_or(NavinError::ShipmentNotFound)?;
+        require_not_finalized(&shipment)?;
+
+        let admin = storage::get_admin(&env);
+        if caller != shipment.carrier && caller != admin {
+            return Err(NavinError::Unauthorized);
+        }
+
+        if caller == shipment.carrier {
+            require_active_carrier(&env, &caller)?;
+        }
+
+        // Check if milestone exists in payment_milestones
+        let mut milestone_idx = None;
+        for (i, ms) in shipment.payment_milestones.iter().enumerate() {
+            if ms.0 == milestone_name {
+                milestone_idx = Some(i);
+                break;
+            }
+        }
+
+        let idx = milestone_idx.ok_or(NavinError::InvalidShipmentInput)?;
+
+        // Check if already in milestones_completed
+        let mut already_completed = false;
+        for ms in shipment.milestones_completed.iter() {
+            if ms == milestone_name {
+                already_completed = true;
+                break;
+            }
+        }
+
+        if already_completed {
+            return Err(NavinError::MilestoneAlreadyPaid);
+        }
+
+        let ms_config = shipment.payment_milestones.get(idx as u32).unwrap();
+        let release_amount = checked_mul_div_i128(shipment.total_escrow, ms_config.1 as i128, 100)?;
+
+        if release_amount > 0 {
+            shipment.milestones_completed.push_back(milestone_name.clone());
+            // Keep paid_milestones in sync for backward compatibility
+            let mut in_paid = false;
+            for ms in shipment.paid_milestones.iter() {
+                if ms == milestone_name {
+                    in_paid = true;
+                    break;
+                }
+            }
+            if !in_paid {
+                shipment.paid_milestones.push_back(milestone_name.clone());
+            }
+
+            events::emit_milestone_payment_released(
+                &env,
+                shipment_id,
+                &milestone_name,
+                release_amount,
+                &shipment.carrier,
+            );
+            internal_release_escrow(&env, &mut shipment, release_amount)?;
+        }
+
+        finalize_if_settled(&env, &mut shipment);
+        storage::set_shipment(&env, &shipment);
 
         Ok(())
     }
@@ -5004,7 +5146,42 @@ impl NavinShipment {
         Ok(())
     }
 
-    /// Get the current contract configuration.
+    /// Update the platform fee configuration. Only Admin can execute.
+    ///
+    /// # Arguments
+    /// * `env` - Execution environment.
+    /// * `admin` - Contract admin executing the configuration.
+    /// * `fee_bps` - Fee in basis points (capped at 1000).
+    /// * `treasury` - Address where fees will be collected.
+    pub fn set_platform_fee(
+        env: Env,
+        admin: Address,
+        fee_bps: u32,
+        treasury: Address,
+    ) -> Result<(), NavinError> {
+        require_initialized(&env)?;
+        require_not_paused(&env)?;
+        admin.require_auth();
+        require_admin(&env, &admin)?;
+
+        if fee_bps > 1000 {
+            return Err(NavinError::InvalidAmount);
+        }
+
+        let config = FeeConfig {
+            fee_bps,
+            treasury: treasury.clone(),
+        };
+
+        storage::set_fee_config(&env, &config);
+        storage::set_treasury(&env, &treasury);
+
+        events::emit_fee_config_updated(&env, &admin, fee_bps, &treasury);
+
+        Ok(())
+    }
+
+    /// Add a new carrier to the contract.
     ///
     /// # Arguments
     /// * `env` - Execution environment.

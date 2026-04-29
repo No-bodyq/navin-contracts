@@ -410,6 +410,37 @@ pub fn emit_escrow_refunded(env: &Env, shipment_id: u64, to: &Address, amount: i
     crate::storage::increment_event_count(env, shipment_id);
 }
 
+/// Emits a `milestone_payment_released` event when a partial escrow release occurs.
+pub fn emit_milestone_payment_released(
+    env: &Env,
+    shipment_id: u64,
+    milestone: &Symbol,
+    amount: i128,
+    to: &Address,
+) {
+    let event_counter = next_event_counter(env, shipment_id);
+    let idempotency_key = generate_idempotency_key(
+        env,
+        crate::event_topics::HASH_DOMAIN_ESCROW,
+        shipment_id,
+        crate::event_topics::MILESTONE_PAYMENT_RELEASED,
+        event_counter,
+    );
+    env.events().publish(
+        (Symbol::new(env, crate::event_topics::MILESTONE_PAYMENT_RELEASED),),
+        (
+            shipment_id,
+            milestone.clone(),
+            amount,
+            to.clone(),
+            EVENT_SCHEMA_VERSION,
+            event_counter,
+            idempotency_key,
+        ),
+    );
+    crate::storage::increment_event_count(env, shipment_id);
+}
+
 /// Emits a `dispute_raised` event when a party disputes a shipment.
 ///
 /// The `reason_hash` follows the same Hash-and-Emit pattern: the full dispute
@@ -1399,5 +1430,47 @@ pub fn emit_escrow_frozen(
             caller.clone(),
             env.ledger().timestamp(),
         ),
+    );
+}
+
+/// Emits a `platform_fee_collected` event when a fee is deducted from a deposit.
+pub fn emit_platform_fee_collected(
+    env: &Env,
+    shipment_id: u64,
+    treasury: &Address,
+    amount: i128,
+) {
+    let event_counter = next_event_counter(env, shipment_id);
+    let idempotency_key = generate_idempotency_key(
+        env,
+        crate::event_topics::HASH_DOMAIN_PLATFORM,
+        shipment_id,
+        crate::event_topics::PLATFORM_FEE_COLLECTED,
+        event_counter,
+    );
+    env.events().publish(
+        (Symbol::new(env, crate::event_topics::PLATFORM_FEE_COLLECTED),),
+        (
+            shipment_id,
+            treasury.clone(),
+            amount,
+            EVENT_SCHEMA_VERSION,
+            event_counter,
+            idempotency_key,
+        ),
+    );
+    crate::storage::increment_event_count(env, shipment_id);
+}
+
+/// Emits a `fee_config_updated` event when the platform fee configuration changes.
+pub fn emit_fee_config_updated(
+    env: &Env,
+    admin: &Address,
+    fee_bps: u32,
+    treasury: &Address,
+) {
+    env.events().publish(
+        (Symbol::new(env, crate::event_topics::FEE_CONFIG_UPDATED),),
+        (admin.clone(), fee_bps, treasury.clone(), EVENT_SCHEMA_VERSION),
     );
 }

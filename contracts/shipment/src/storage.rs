@@ -1222,6 +1222,26 @@ pub fn get_effective_shipment_limit(env: &Env, company: &Address) -> u32 {
     get_company_shipment_limit(env, company).unwrap_or_else(|| get_shipment_limit(env))
 }
 
+/// Get the platform fee configuration from instance storage.
+pub fn get_fee_config(env: &Env) -> Option<FeeConfig> {
+    env.storage().instance().get(&DataKey::FeeConfig)
+}
+
+/// Set the platform fee configuration in instance storage.
+pub fn set_fee_config(env: &Env, config: &FeeConfig) {
+    env.storage().instance().set(&DataKey::FeeConfig, config);
+}
+
+/// Get the platform treasury address from instance storage.
+pub fn get_treasury(env: &Env) -> Option<Address> {
+    env.storage().instance().get(&DataKey::Treasury)
+}
+
+/// Set the platform treasury address in instance storage.
+pub fn set_treasury(env: &Env, treasury: &Address) {
+    env.storage().instance().set(&DataKey::Treasury, treasury);
+}
+
 /// Get the current active shipment count for a company from instance storage.
 ///
 /// # Arguments

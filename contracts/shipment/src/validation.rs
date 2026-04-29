@@ -173,6 +173,21 @@ pub fn validate_amount(amount: i128) -> Result<(), NavinError> {
     Ok(())
 }
 
+/// Ensure an amount is strictly positive.
+///
+/// # Arguments
+/// * `amount` - The `i128` value to validate.
+///
+/// # Returns
+/// * `Ok(())` if `amount > 0`.
+/// * `Err(NavinError::InvalidAmount)` otherwise.
+pub fn validate_positive_amount(amount: i128) -> Result<(), NavinError> {
+    if amount <= 0 || amount > MAX_AMOUNT {
+        return Err(NavinError::InvalidAmount);
+    }
+    Ok(())
+}
+
 /// Ensure a timestamp is neither too far in the past nor too far in the future
 /// relative to the current ledger time.
 ///
@@ -393,6 +408,7 @@ mod tests {
             metadata: None,
             payment_milestones: soroban_sdk::Vec::new(&env),
             paid_milestones: soroban_sdk::Vec::new(&env),
+            milestones_completed: soroban_sdk::Vec::new(&env),
             deadline: 200,
             integration_nonce: 0,
             finalized: false,
@@ -418,6 +434,7 @@ mod tests {
             metadata: None,
             payment_milestones: soroban_sdk::Vec::new(&env),
             paid_milestones: soroban_sdk::Vec::new(&env),
+            milestones_completed: soroban_sdk::Vec::new(&env),
             deadline: 200,
             integration_nonce: 0,
             finalized: false,

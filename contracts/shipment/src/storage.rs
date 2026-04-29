@@ -1806,14 +1806,21 @@ pub fn clear_active_settlement(env: &Env, shipment_id: u64) {
 // ============= Creation Quota Storage Functions (issue #296) =============
 
 /// Get the creation quota tracker for a company.
-pub fn get_creation_quota(env: &Env, company: &Address) -> Option<crate::types::CreationQuotaTracker> {
+pub fn get_creation_quota(
+    env: &Env,
+    company: &Address,
+) -> Option<crate::types::CreationQuotaTracker> {
     env.storage()
         .instance()
         .get(&DataKey::CompanyCreationQuota(company.clone()))
 }
 
 /// Set the creation quota tracker for a company.
-pub fn set_creation_quota(env: &Env, company: &Address, tracker: &crate::types::CreationQuotaTracker) {
+pub fn set_creation_quota(
+    env: &Env,
+    company: &Address,
+    tracker: &crate::types::CreationQuotaTracker,
+) {
     env.storage()
         .instance()
         .set(&DataKey::CompanyCreationQuota(company.clone()), tracker);
@@ -1822,14 +1829,21 @@ pub fn set_creation_quota(env: &Env, company: &Address, tracker: &crate::types::
 // ============= Proposal Digest Storage Functions (issue #297) =============
 
 /// Store the action digest for a proposal.
-pub fn set_proposal_digest(env: &Env, proposal_id: u64, digest: &crate::types::ProposalActionDigest) {
+pub fn set_proposal_digest(
+    env: &Env,
+    proposal_id: u64,
+    digest: &crate::types::ProposalActionDigest,
+) {
     env.storage()
         .persistent()
         .set(&DataKey::ProposalDigest(proposal_id), digest);
 }
 
 /// Retrieve the action digest for a proposal.
-pub fn get_proposal_digest(env: &Env, proposal_id: u64) -> Option<crate::types::ProposalActionDigest> {
+pub fn get_proposal_digest(
+    env: &Env,
+    proposal_id: u64,
+) -> Option<crate::types::ProposalActionDigest> {
     env.storage()
         .persistent()
         .get(&DataKey::ProposalDigest(proposal_id))

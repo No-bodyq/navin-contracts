@@ -709,7 +709,6 @@ pub struct ShipmentStatusSummary {
     pub cancelled: u64,
 }
 
-
 /// Paginated result for company-carrier relationship queries (issue #295).
 ///
 /// Returns a page of carrier addresses whitelisted by a company, with a

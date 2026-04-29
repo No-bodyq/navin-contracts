@@ -1246,7 +1246,6 @@ fn test_get_shipment_carrier_fails_for_invalid_id() {
     client.get_shipment_carrier(&999);
 }
 
-
 // ============= Geofence Event Tests =============
 
 #[test]
@@ -3534,7 +3533,8 @@ fn test_milestone_payment_duplicate_record_no_double_pay() {
     assert_eq!(client.get_shipment(&shipment_id).escrow_amount, 500);
 
     // Record Milestone 1 AGAIN — must be rejected to prevent double-pay
-    let dup_result = client.try_record_milestone(&carrier, &shipment_id, &Symbol::new(&env, "m1"), &data_hash);
+    let dup_result =
+        client.try_record_milestone(&carrier, &shipment_id, &Symbol::new(&env, "m1"), &data_hash);
     assert_eq!(dup_result, Err(Ok(crate::NavinError::MilestoneAlreadyPaid)));
     // Escrow must still be 500 — no double payment
     assert_eq!(client.get_shipment(&shipment_id).escrow_amount, 500);
@@ -6150,10 +6150,13 @@ fn test_get_status_summary_populated() {
     let summary = client.get_status_summary();
     assert_eq!(summary.created, 3);
 
-    // Update 1 to InTransit
+    // Update shipment 1 to InTransit
     client.update_status(&carrier, &1, &ShipmentStatus::InTransit, &data_hash);
 
-    // Update 1 to AtCheckpoint
+    // Update shipment 2: Created -> InTransit -> AtCheckpoint (direct Created->AtCheckpoint is not a valid transition)
+    client.update_status(&carrier, &2, &ShipmentStatus::InTransit, &data_hash);
+    // Advance past the min_status_update_interval (60 s) before the next update on the same shipment.
+    super::test_utils::advance_ledger_time(&env, 61);
     client.update_status(&carrier, &2, &ShipmentStatus::AtCheckpoint, &data_hash);
 
     let summary = client.get_status_summary();
@@ -6206,8 +6209,6 @@ fn test_get_non_terminal_count_mixed_states() {
     client.raise_dispute(&company, &3, &data_hash);
     assert_eq!(client.get_non_terminal_count(), 2);
 }
-
-
 
 // ============= Shipment Limit Tests =============
 
@@ -6834,7 +6835,12 @@ fn test_resolve_dispute_returns_invalid_hash() {
         crate::ShipmentStatus::Disputed,
     );
 
-    client.resolve_dispute(&admin, &shipment_id, &crate::DisputeResolution::RefundToCompany, &zero_hash);
+    client.resolve_dispute(
+        &admin,
+        &shipment_id,
+        &crate::DisputeResolution::RefundToCompany,
+        &zero_hash,
+    );
 }
 
 #[test]

@@ -1000,7 +1000,7 @@
                 },
                 "durability": "persistent",
                 "val": {
-                  "u32": 9
+                  "u32": 11
                 }
               }
             },
@@ -1838,6 +1838,21 @@
                         "symbol": "metadata"
                       },
                       "val": "void"
+                    },
+                    {
+                      "key": {
+                        "symbol": "milestones_completed"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "warehouse"
+                          },
+                          {
+                            "symbol": "port"
+                          }
+                        ]
+                      }
                     },
                     {
                       "key": {

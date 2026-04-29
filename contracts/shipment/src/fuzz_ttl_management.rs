@@ -289,10 +289,7 @@ fn fuzz_ttl_random_extension_timings() {
         );
 
         let shipment = result.unwrap().unwrap();
-        assert_eq!(
-            shipment.id, id,
-            "Shipment ID mismatch after random timing"
-        );
+        assert_eq!(shipment.id, id, "Shipment ID mismatch after random timing");
     }
 }
 

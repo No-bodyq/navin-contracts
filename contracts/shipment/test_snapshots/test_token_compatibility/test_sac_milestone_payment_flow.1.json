@@ -844,7 +844,7 @@
                 },
                 "durability": "persistent",
                 "val": {
-                  "u32": 7
+                  "u32": 9
                 }
               }
             },
@@ -1547,6 +1547,21 @@
                         "symbol": "metadata"
                       },
                       "val": "void"
+                    },
+                    {
+                      "key": {
+                        "symbol": "milestones_completed"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "M1"
+                          },
+                          {
+                            "symbol": "M2"
+                          }
+                        ]
+                      }
                     },
                     {
                       "key": {

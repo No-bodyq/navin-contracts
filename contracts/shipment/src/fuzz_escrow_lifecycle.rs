@@ -173,13 +173,8 @@ fn fuzz_escrow_deposit_rejects_invalid_amounts() {
     let iterations = fuzz_iterations();
 
     // Invalid amounts to test
-    let invalid_amounts: std::vec::Vec<i128> = std::vec![
-        0,
-        -1,
-        -1000,
-        i128::MIN,
-        -1_000_000_000_000_000_i128,
-    ];
+    let invalid_amounts: std::vec::Vec<i128> =
+        std::vec![0, -1, -1000, i128::MIN, -1_000_000_000_000_000_i128,];
 
     for (i, &amount) in invalid_amounts.iter().enumerate() {
         let seed = xorshift64(&mut rng);

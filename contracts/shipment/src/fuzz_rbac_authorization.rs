@@ -165,10 +165,7 @@ fn fuzz_rbac_admin_never_loses_privileges() {
         // Property: admin can still add carrier
         let new_carrier = Address::generate(&env);
         let result = client.try_add_carrier(&admin, &new_carrier);
-        assert!(
-            result.is_ok(),
-            "Admin must retain add_carrier privilege"
-        );
+        assert!(result.is_ok(), "Admin must retain add_carrier privilege");
     }
 }
 
@@ -421,10 +418,7 @@ fn fuzz_rbac_role_assignment_idempotent() {
 
         // Both must succeed (idempotent) or second may be a no-op
         // The key property: the address has the role after both calls
-        assert!(
-            r1.is_ok(),
-            "First role assignment must succeed"
-        );
+        assert!(r1.is_ok(), "First role assignment must succeed");
         // Second assignment: may succeed or return already-assigned, but must not panic
         // and must not revoke the role
         let _ = r2; // result doesn't matter, just must not panic

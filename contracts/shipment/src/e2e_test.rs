@@ -272,6 +272,7 @@ fn test_e2e_happy_path_with_milestones_and_token_balances() {
         warehouse_topics,
         std::vec![
             "milestone_recorded".to_string(),
+            "milestone_payment_released".to_string(),
             "escrow_released".to_string()
         ],
         "record_milestone must emit milestone_recorded before escrow_released"
@@ -305,6 +306,7 @@ fn test_e2e_happy_path_with_milestones_and_token_balances() {
         port_topics,
         std::vec![
             "milestone_recorded".to_string(),
+            "milestone_payment_released".to_string(),
             "escrow_released".to_string()
         ],
         "milestone payment ordering must stay deterministic"
@@ -771,6 +773,7 @@ fn test_regression_milestone_release_event_ordering() {
         topics,
         std::vec![
             "milestone_recorded".to_string(),
+            "milestone_payment_released".to_string(),
             "escrow_released".to_string()
         ],
         "regression guard: milestone and escrow release emitters must not be reordered"

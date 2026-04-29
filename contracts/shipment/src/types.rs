@@ -98,6 +98,10 @@ pub enum DataKey {
     StatusHash(u64, ShipmentStatus),
     /// Contract pause state flag.
     IsPaused,
+    /// Platform fee configuration.
+    FeeConfig,
+    /// Designated address for platform fee collection.
+    Treasury,
     /// Rate limit quota tracker per actor (company/carrier).
     ActorQuota(Address),
     /// Circuit breaker state for token transfers.
@@ -328,6 +332,8 @@ pub struct Shipment {
     pub payment_milestones: Vec<(Symbol, u32)>,
     /// List of symbols for milestones that have already been paid.
     pub paid_milestones: Vec<Symbol>,
+    /// List of symbols for checkpoints that have been hit and recorded.
+    pub milestones_completed: Vec<Symbol>,
     /// Timestamp after which the shipment is considered expired and can be auto-cancelled.
     pub deadline: u64,
     /// Counter to prevent replay of external actions and correlate off-chain integrations.
@@ -716,7 +722,6 @@ pub struct ShipmentStatusSummary {
     pub cancelled: u64,
 }
 
-
 /// Paginated result for company-carrier relationship queries (issue #295).
 ///
 /// Returns a page of carrier addresses whitelisted by a company, with a
@@ -757,4 +762,14 @@ pub struct ProposalActionDigest {
     pub digest: BytesN<32>,
     /// Ledger timestamp when the digest was computed.
     pub computed_at: u64,
+}
+
+/// Configuration for platform revenue collection.
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct FeeConfig {
+    /// The fee in basis points (1 bps = 0.01%). Capped at 1000 (10%).
+    pub fee_bps: u32,
+    /// The address where collected fees are sent.
+    pub treasury: Address,
 }

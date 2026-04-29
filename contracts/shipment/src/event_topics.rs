@@ -57,6 +57,12 @@ pub const ESCROW_RELEASED: &str = "escrow_released";
 /// Emitted when escrowed funds are returned to the company.
 pub const ESCROW_REFUNDED: &str = "escrow_refunded";
 
+/// Emitted when a partial milestone-based escrow release is triggered.
+pub const MILESTONE_PAYMENT_RELEASED: &str = "milestone_payment_released";
+
+/// Emitted when a platform fee is collected from a deposit.
+pub const PLATFORM_FEE_COLLECTED: &str = "platform_fee_collected";
+
 // ── Disputes ──────────────────────────────────────────────────────────────────
 
 /// Emitted when any party raises a dispute on a shipment.
@@ -112,6 +118,9 @@ pub const CONTRACT_UNPAUSED: &str = "contract_unpaused";
 
 /// Emitted when an admin forcibly cancels a shipment (privileged path).
 pub const FORCE_CANCELLED: &str = "force_cancelled";
+
+/// Emitted when the platform fee configuration is updated.
+pub const FEE_CONFIG_UPDATED: &str = "fee_config_updated";
 
 // ── RBAC ──────────────────────────────────────────────────────────────────────
 
@@ -205,8 +214,11 @@ pub const HASH_DOMAIN_NOTIFICATION: u8 = 0x08;
 pub const HASH_DOMAIN_NOTE: u8 = 0x09;
 
 /// Domain tag for dispute-evidence events (`evidence_added`).
-#[allow(dead_code)]
 pub const HASH_DOMAIN_EVIDENCE: u8 = 0x0A;
+
+/// Domain tag for platform-level events (`platform_fee_collected`, `fee_config_updated`).
+pub const HASH_DOMAIN_PLATFORM: u8 = 0x0B;
+
 // ── Escrow freeze ─────────────────────────────────────────────────────────────
 
 /// Emitted when escrow is frozen due to a dispute or safety control.

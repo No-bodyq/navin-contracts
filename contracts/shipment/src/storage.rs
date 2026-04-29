@@ -1222,6 +1222,26 @@ pub fn get_effective_shipment_limit(env: &Env, company: &Address) -> u32 {
     get_company_shipment_limit(env, company).unwrap_or_else(|| get_shipment_limit(env))
 }
 
+/// Get the platform fee configuration from instance storage.
+pub fn get_fee_config(env: &Env) -> Option<FeeConfig> {
+    env.storage().instance().get(&DataKey::FeeConfig)
+}
+
+/// Set the platform fee configuration in instance storage.
+pub fn set_fee_config(env: &Env, config: &FeeConfig) {
+    env.storage().instance().set(&DataKey::FeeConfig, config);
+}
+
+/// Get the platform treasury address from instance storage.
+pub fn get_treasury(env: &Env) -> Option<Address> {
+    env.storage().instance().get(&DataKey::Treasury)
+}
+
+/// Set the platform treasury address in instance storage.
+pub fn set_treasury(env: &Env, treasury: &Address) {
+    env.storage().instance().set(&DataKey::Treasury, treasury);
+}
+
 /// Get the current active shipment count for a company from instance storage.
 ///
 /// # Arguments
@@ -1806,14 +1826,21 @@ pub fn clear_active_settlement(env: &Env, shipment_id: u64) {
 // ============= Creation Quota Storage Functions (issue #296) =============
 
 /// Get the creation quota tracker for a company.
-pub fn get_creation_quota(env: &Env, company: &Address) -> Option<crate::types::CreationQuotaTracker> {
+pub fn get_creation_quota(
+    env: &Env,
+    company: &Address,
+) -> Option<crate::types::CreationQuotaTracker> {
     env.storage()
         .instance()
         .get(&DataKey::CompanyCreationQuota(company.clone()))
 }
 
 /// Set the creation quota tracker for a company.
-pub fn set_creation_quota(env: &Env, company: &Address, tracker: &crate::types::CreationQuotaTracker) {
+pub fn set_creation_quota(
+    env: &Env,
+    company: &Address,
+    tracker: &crate::types::CreationQuotaTracker,
+) {
     env.storage()
         .instance()
         .set(&DataKey::CompanyCreationQuota(company.clone()), tracker);
@@ -1822,14 +1849,21 @@ pub fn set_creation_quota(env: &Env, company: &Address, tracker: &crate::types::
 // ============= Proposal Digest Storage Functions (issue #297) =============
 
 /// Store the action digest for a proposal.
-pub fn set_proposal_digest(env: &Env, proposal_id: u64, digest: &crate::types::ProposalActionDigest) {
+pub fn set_proposal_digest(
+    env: &Env,
+    proposal_id: u64,
+    digest: &crate::types::ProposalActionDigest,
+) {
     env.storage()
         .persistent()
         .set(&DataKey::ProposalDigest(proposal_id), digest);
 }
 
 /// Retrieve the action digest for a proposal.
-pub fn get_proposal_digest(env: &Env, proposal_id: u64) -> Option<crate::types::ProposalActionDigest> {
+pub fn get_proposal_digest(
+    env: &Env,
+    proposal_id: u64,
+) -> Option<crate::types::ProposalActionDigest> {
     env.storage()
         .persistent()
         .get(&DataKey::ProposalDigest(proposal_id))

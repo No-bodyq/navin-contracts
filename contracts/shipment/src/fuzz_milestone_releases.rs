@@ -67,10 +67,7 @@ fn hash_from_seed(env: &Env, seed: u64) -> BytesN<32> {
 }
 
 /// Build a valid milestone Vec that sums to exactly 100.
-fn build_milestones_summing_to_100(
-    env: &Env,
-    count: usize,
-) -> Vec<(Symbol, u32)> {
+fn build_milestones_summing_to_100(env: &Env, count: usize) -> Vec<(Symbol, u32)> {
     assert!(count >= 1 && count <= 5);
     let mut milestones = Vec::new(env);
     let per = 100u32 / count as u32;
@@ -337,8 +334,7 @@ fn fuzz_milestone_idempotency_single_payment() {
         // Second record of same milestone — must fail
         env.ledger().with_mut(|l| l.timestamp += 65);
         let mh2 = hash_from_seed(&env, seed.wrapping_add(12));
-        let result =
-            client.try_record_milestone(&carrier, &id, &Symbol::new(&env, "alpha"), &mh2);
+        let result = client.try_record_milestone(&carrier, &id, &Symbol::new(&env, "alpha"), &mh2);
         assert!(
             result.is_err(),
             "Duplicate milestone payment must fail for shipment {id}"

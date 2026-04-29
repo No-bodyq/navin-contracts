@@ -1278,7 +1278,6 @@ fn test_get_shipment_carrier_fails_for_invalid_id() {
     client.get_shipment_carrier(&999);
 }
 
-
 // ============= Geofence Event Tests =============
 
 #[test]
@@ -2495,7 +2494,7 @@ fn test_record_milestone_success() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #8)")]
+#[should_panic(expected = "Error(Contract, #14)")]
 fn test_deposit_escrow_invalid_amount() {
     let (env, client, admin, token_contract) = setup_shipment_env();
     let company = Address::generate(&env);
@@ -3625,7 +3624,8 @@ fn test_milestone_payment_duplicate_record_no_double_pay() {
     assert_eq!(client.get_shipment(&shipment_id).escrow_amount, 500);
 
     // Record Milestone 1 AGAIN — must be rejected to prevent double-pay
-    let dup_result = client.try_record_milestone(&carrier, &shipment_id, &Symbol::new(&env, "m1"), &data_hash);
+    let dup_result =
+        client.try_record_milestone(&carrier, &shipment_id, &Symbol::new(&env, "m1"), &data_hash);
     assert_eq!(dup_result, Err(Ok(crate::NavinError::MilestoneAlreadyPaid)));
     // Escrow must still be 500 — no double payment
     assert_eq!(client.get_shipment(&shipment_id).escrow_amount, 500);
@@ -6288,7 +6288,7 @@ fn test_get_status_summary_populated() {
     let summary = client.get_status_summary();
     assert_eq!(summary.created, 3);
 
-    // Update 1 to InTransit
+    // Update shipment 1 to InTransit
     client.update_status(&carrier, &1, &ShipmentStatus::InTransit, &data_hash);
 
     env.ledger().with_mut(|li| {
@@ -6305,6 +6305,49 @@ fn test_get_status_summary_populated() {
     assert_eq!(summary.delivered, 0);
 }
 
+#[test]
+fn test_get_non_terminal_count_mixed_states() {
+    let (env, client, admin, token_contract) = setup_shipment_env();
+    let company = Address::generate(&env);
+    let receiver = Address::generate(&env);
+    let carrier = Address::generate(&env);
+    let data_hash = BytesN::from_array(&env, &[1u8; 32]);
+    let deadline = env.ledger().timestamp() + 3600;
+
+    client.initialize(&admin, &token_contract);
+    client.add_company(&admin, &company);
+
+    // Create 5 shipments
+    for i in 1..=5 {
+        client.create_shipment(
+            &company,
+            &receiver,
+            &carrier,
+            &BytesN::from_array(&env, &[i as u8; 32]),
+            &soroban_sdk::Vec::new(&env),
+            &deadline,
+        );
+    }
+
+    // Status: 5 Created (Non-terminal)
+    assert_eq!(client.get_non_terminal_count(), 5);
+
+    // Update 1 to InTransit (Non-terminal)
+    client.update_status(&carrier, &1, &ShipmentStatus::InTransit, &data_hash);
+    assert_eq!(client.get_non_terminal_count(), 5);
+
+    // Update 1 to Delivered (Terminal)
+    client.confirm_delivery(&receiver, &1, &data_hash);
+    assert_eq!(client.get_non_terminal_count(), 4);
+
+    // Cancel 1 shipment (Terminal)
+    client.cancel_shipment(&company, &2, &data_hash);
+    assert_eq!(client.get_non_terminal_count(), 3);
+
+    // Raise dispute for 1 shipment (Terminal according to requirements)
+    client.raise_dispute(&company, &3, &data_hash);
+    assert_eq!(client.get_non_terminal_count(), 2);
+}
 
 // ============= Shipment Limit Tests =============
 
@@ -6951,7 +6994,12 @@ fn test_resolve_dispute_returns_invalid_hash() {
         crate::ShipmentStatus::Disputed,
     );
 
-    client.resolve_dispute(&admin, &shipment_id, &crate::DisputeResolution::RefundToCompany, &zero_hash);
+    client.resolve_dispute(
+        &admin,
+        &shipment_id,
+        &crate::DisputeResolution::RefundToCompany,
+        &zero_hash,
+    );
 }
 
 #[test]
@@ -7105,7 +7153,7 @@ fn test_create_shipment_returns_counter_overflow() {
 // ============= Error #14: InvalidAmount Tests =============
 
 #[test]
-#[should_panic(expected = "Error(Contract, #8)")]
+#[should_panic(expected = "Error(Contract, #14)")]
 fn test_deposit_escrow_returns_invalid_amount_zero() {
     let (env, client, admin, token_contract) = setup_shipment_env();
     let company = Address::generate(&env);
@@ -7131,7 +7179,7 @@ fn test_deposit_escrow_returns_invalid_amount_zero() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #8)")]
+#[should_panic(expected = "Error(Contract, #14)")]
 fn test_deposit_escrow_returns_invalid_amount_negative() {
     let (env, client, admin, token_contract) = setup_shipment_env();
     let company = Address::generate(&env);

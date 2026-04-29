@@ -72,7 +72,14 @@ fn setup_full() -> TestContext {
     client.add_company(&admin, &company);
     client.add_carrier(&admin, &carrier);
 
-    TestContext { env, client, admin, company, carrier, receiver }
+    TestContext {
+        env,
+        client,
+        admin,
+        company,
+        carrier,
+        receiver,
+    }
 }
 
 fn non_zero_hash(env: &Env, seed: u8) -> BytesN<32> {
@@ -86,7 +93,14 @@ fn non_zero_hash(env: &Env, seed: u8) -> BytesN<32> {
 #[test]
 fn wallet_auth_happy_path_full_lifecycle() {
     let ctx = setup_full();
-    let TestContext { env, client, admin: _, company, carrier, receiver } = ctx;
+    let TestContext {
+        env,
+        client,
+        admin: _,
+        company,
+        carrier,
+        receiver,
+    } = ctx;
 
     let data_hash = non_zero_hash(&env, 1);
     let deadline = env.ledger().timestamp() + 86_400 * 30;
@@ -113,13 +127,29 @@ fn wallet_auth_happy_path_full_lifecycle() {
 
     // Carrier wallet: update to InTransit
     env.ledger().with_mut(|l| l.timestamp += 65);
-    client.update_status(&carrier, &id, &crate::ShipmentStatus::InTransit, &non_zero_hash(&env, 2));
-    assert_eq!(client.get_shipment(&id).status, crate::ShipmentStatus::InTransit);
+    client.update_status(
+        &carrier,
+        &id,
+        &crate::ShipmentStatus::InTransit,
+        &non_zero_hash(&env, 2),
+    );
+    assert_eq!(
+        client.get_shipment(&id).status,
+        crate::ShipmentStatus::InTransit
+    );
 
     // Carrier wallet: update to Delivered
     env.ledger().with_mut(|l| l.timestamp += 65);
-    client.update_status(&carrier, &id, &crate::ShipmentStatus::Delivered, &non_zero_hash(&env, 3));
-    assert_eq!(client.get_shipment(&id).status, crate::ShipmentStatus::Delivered);
+    client.update_status(
+        &carrier,
+        &id,
+        &crate::ShipmentStatus::Delivered,
+        &non_zero_hash(&env, 3),
+    );
+    assert_eq!(
+        client.get_shipment(&id).status,
+        crate::ShipmentStatus::Delivered
+    );
 
     // Receiver wallet: release escrow to carrier
     client.release_escrow(&receiver, &id);
@@ -137,7 +167,14 @@ fn wallet_auth_happy_path_full_lifecycle() {
 #[test]
 fn wallet_auth_cancel_refund_path() {
     let ctx = setup_full();
-    let TestContext { env, client, admin: _, company, carrier, receiver } = ctx;
+    let TestContext {
+        env,
+        client,
+        admin: _,
+        company,
+        carrier,
+        receiver,
+    } = ctx;
 
     let data_hash = non_zero_hash(&env, 10);
     let deadline = env.ledger().timestamp() + 86_400 * 30;
@@ -157,7 +194,10 @@ fn wallet_auth_cancel_refund_path() {
 
     // Company cancels — auto-zeros escrow and finalizes
     client.cancel_shipment(&company, &id, &non_zero_hash(&env, 11));
-    assert_eq!(client.get_shipment(&id).status, crate::ShipmentStatus::Cancelled);
+    assert_eq!(
+        client.get_shipment(&id).status,
+        crate::ShipmentStatus::Cancelled
+    );
     assert_eq!(client.get_escrow_balance(&id), 0);
 
     // Auth outcome: shipment finalized after cancel
@@ -172,7 +212,14 @@ fn wallet_auth_cancel_refund_path() {
 #[test]
 fn wallet_auth_dispute_resolution_to_carrier() {
     let ctx = setup_full();
-    let TestContext { env, client, admin, company, carrier, receiver } = ctx;
+    let TestContext {
+        env,
+        client,
+        admin,
+        company,
+        carrier,
+        receiver,
+    } = ctx;
 
     let data_hash = non_zero_hash(&env, 20);
     let deadline = env.ledger().timestamp() + 86_400 * 30;
@@ -190,11 +237,19 @@ fn wallet_auth_dispute_resolution_to_carrier() {
     client.deposit_escrow(&company, &id, &750_000i128);
 
     env.ledger().with_mut(|l| l.timestamp += 65);
-    client.update_status(&carrier, &id, &crate::ShipmentStatus::InTransit, &non_zero_hash(&env, 21));
+    client.update_status(
+        &carrier,
+        &id,
+        &crate::ShipmentStatus::InTransit,
+        &non_zero_hash(&env, 21),
+    );
 
     // Receiver raises dispute
     client.raise_dispute(&receiver, &id, &non_zero_hash(&env, 22));
-    assert_eq!(client.get_shipment(&id).status, crate::ShipmentStatus::Disputed);
+    assert_eq!(
+        client.get_shipment(&id).status,
+        crate::ShipmentStatus::Disputed
+    );
 
     // Admin resolves: release to carrier
     client.resolve_dispute(
@@ -207,7 +262,10 @@ fn wallet_auth_dispute_resolution_to_carrier() {
     // Auth outcome: escrow released to carrier
     assert_eq!(client.get_escrow_balance(&id), 0);
     let s = client.get_shipment(&id);
-    assert!(s.finalized, "Shipment must be finalized after dispute resolution");
+    assert!(
+        s.finalized,
+        "Shipment must be finalized after dispute resolution"
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -217,7 +275,14 @@ fn wallet_auth_dispute_resolution_to_carrier() {
 #[test]
 fn wallet_auth_dispute_resolution_refund_to_company() {
     let ctx = setup_full();
-    let TestContext { env, client, admin, company, carrier, receiver } = ctx;
+    let TestContext {
+        env,
+        client,
+        admin,
+        company,
+        carrier,
+        receiver,
+    } = ctx;
 
     let data_hash = non_zero_hash(&env, 30);
     let deadline = env.ledger().timestamp() + 86_400 * 30;
@@ -235,7 +300,12 @@ fn wallet_auth_dispute_resolution_refund_to_company() {
     client.deposit_escrow(&company, &id, &300_000i128);
 
     env.ledger().with_mut(|l| l.timestamp += 65);
-    client.update_status(&carrier, &id, &crate::ShipmentStatus::InTransit, &non_zero_hash(&env, 31));
+    client.update_status(
+        &carrier,
+        &id,
+        &crate::ShipmentStatus::InTransit,
+        &non_zero_hash(&env, 31),
+    );
 
     client.raise_dispute(&company, &id, &non_zero_hash(&env, 32));
 
@@ -249,7 +319,10 @@ fn wallet_auth_dispute_resolution_refund_to_company() {
 
     assert_eq!(client.get_escrow_balance(&id), 0);
     let s = client.get_shipment(&id);
-    assert!(s.finalized, "Shipment must be finalized after refund resolution");
+    assert!(
+        s.finalized,
+        "Shipment must be finalized after refund resolution"
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -259,7 +332,14 @@ fn wallet_auth_dispute_resolution_refund_to_company() {
 #[test]
 fn wallet_auth_pause_blocks_operations() {
     let ctx = setup_full();
-    let TestContext { env, client, admin, company, carrier, receiver } = ctx;
+    let TestContext {
+        env,
+        client,
+        admin,
+        company,
+        carrier,
+        receiver,
+    } = ctx;
 
     // Admin pauses contract
     client.pause(&admin);
@@ -296,7 +376,10 @@ fn wallet_auth_pause_blocks_operations() {
         &deadline2,
         &None,
     );
-    assert!(result2.is_ok(), "create_shipment must succeed after unpause");
+    assert!(
+        result2.is_ok(),
+        "create_shipment must succeed after unpause"
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -306,7 +389,14 @@ fn wallet_auth_pause_blocks_operations() {
 #[test]
 fn wallet_auth_deadline_expiry_auto_cancel() {
     let ctx = setup_full();
-    let TestContext { env, client, admin: _, company, carrier, receiver } = ctx;
+    let TestContext {
+        env,
+        client,
+        admin: _,
+        company,
+        carrier,
+        receiver,
+    } = ctx;
 
     let data_hash = non_zero_hash(&env, 50);
     // Short deadline: 1 hour from now
@@ -346,7 +436,14 @@ fn wallet_auth_deadline_expiry_auto_cancel() {
 #[test]
 fn wallet_auth_unauthorized_wallet_rejected() {
     let ctx = setup_full();
-    let TestContext { env, client, admin: _, company, carrier, receiver } = ctx;
+    let TestContext {
+        env,
+        client,
+        admin: _,
+        company,
+        carrier,
+        receiver,
+    } = ctx;
 
     let data_hash = non_zero_hash(&env, 60);
     let deadline = env.ledger().timestamp() + 86_400;
